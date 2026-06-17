@@ -23,9 +23,9 @@ export async function PATCH(req: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const user = await getCurrentUser();
+    const user = await getCurrentUser(req);
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const [profile, posts, comments, likesAgg] = await Promise.all([
       prisma.user.findUnique({
