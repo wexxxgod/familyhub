@@ -37,23 +37,36 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.role = (user as any).role;
+      try {
+        if (user) {
+          token.id = user.id;
+          token.role = (user as any).role;
+          log("jwt: set id & role", user.email);
+        } else {
+          log("jwt: refresh", token.email);
+        }
+        return token;
+      } catch (e) {
+        log("jwt error:", e);
+        return token;
       }
-      return token;
     },
     async session({ session, token }) {
-      if (session.user) {
-        (session.user as any).id = token.id;
-        (session.user as any).role = token.role;
-        const fresh = await prisma.user.findUnique({ where: { id: token.id as string }, select: { image: true, name: true } });
-        if (fresh) {
-          session.user.image = fresh.image;
-          session.user.name = fresh.name;
+      try {
+        if (session.user) {
+          (session.user as any).id = token.id;
+          (session.user as any).role = token.role;
+          const fresh = await prisma.user.findUnique({ where: { id: token.id as string }, select: { image: true, name: true } });
+          if (fresh) {
+            session.user.image = fresh.image;
+            session.user.name = fresh.name;
+          }
         }
+        return session;
+      } catch (e) {
+        log("session error:", e);
+        return session;
       }
-      return session;
     },
   },
   pages: {
