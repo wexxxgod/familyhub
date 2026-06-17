@@ -1,4 +1,4 @@
-import { NextResponse, NextRequest } from "next/server";
+﻿import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-helpers";
 
@@ -66,7 +66,7 @@ export async function DELETE(req: NextRequest) {
     const { id } = await req.json();
     const post = await prisma.post.findUnique({ where: { id } });
     if (!post) return NextResponse.json({ error: "Not found" }, { status: 404 });
-    if (post.authorId !== user.id && user.role !== "SUPER_ADMIN") {
+    if (post.authorId !== user.id && user.role !== "SUPER_ADMIN" && user.role !== "PARENT") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
     await prisma.post.delete({ where: { id } });
@@ -75,3 +75,4 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "Failed to delete post" }, { status: 500 });
   }
 }
+

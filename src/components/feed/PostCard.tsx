@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { formatRelativeDate, formatNumber, getInitials, getAvatarColor } from "@/lib/utils";
@@ -7,19 +7,20 @@ import { ImageViewer } from "@/components/shared/ImageViewer";
 interface PostCardProps {
   post: any;
   currentUserId?: string;
+  currentUserRole?: string;
   onToggleLike: () => void;
   onComment: (content: string) => Promise<void>;
   onDelete?: (id: string) => void;
   onDeleteComment?: (commentId: string) => void;
 }
 
-export function PostCard({ post, currentUserId, onToggleLike, onComment, onDelete, onDeleteComment }: PostCardProps) {
+export function PostCard({ post, currentUserId, currentUserRole, onToggleLike, onComment, onDelete, onDeleteComment }: PostCardProps) {
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [sending, setSending] = useState(false);
   const [viewImage, setViewImage] = useState<string | null>(null);
 
-  const canDelete = currentUserId && (post.authorId === currentUserId || post.author?.id === currentUserId);
+  const canDelete = currentUserId && (post.authorId === currentUserId || post.author?.id === currentUserId || currentUserRole === "PARENT");
 
   const handleComment = async () => {
     if (!commentText.trim() || sending) return;
@@ -38,11 +39,15 @@ export function PostCard({ post, currentUserId, onToggleLike, onComment, onDelet
           </button>
         )}
         <div className="flex items-center gap-3 p-4 pb-0">
-          <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${getAvatarColor(post.author?.name || "U")} flex items-center justify-center text-white font-bold shrink-0`}>
-            {getInitials(post.author?.name || "U")}
+          <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${getAvatarColor(post.author?.name || "U")} flex items-center justify-center text-white font-bold shrink-0 overflow-hidden`}>
+            {post.author?.image ? (
+              <img src={post.author.image} alt="" className="w-full h-full object-cover" />
+            ) : (
+              getInitials(post.author?.name || "U")
+            )}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-semibold text-sm truncate">{post.author?.name || "Пользователь"}</p>
+            <p className="font-semibold text-sm truncate">{post.author?.name || "РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ"}</p>
             <p className="text-xs text-muted-foreground">{formatRelativeDate(post.createdAt)}</p>
           </div>
         </div>
@@ -105,8 +110,8 @@ export function PostCard({ post, currentUserId, onToggleLike, onComment, onDelet
               </div>
             )}
             <div className="flex gap-3">
-              <input type="text" value={commentText} onChange={(e) => setCommentText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleComment()} placeholder="Напишите комментарий..." className="flex-1 px-4 py-2 rounded-xl bg-accent outline-none text-sm" />
-              <button onClick={handleComment} disabled={!commentText.trim() || sending} className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50">Отправить</button>
+              <input type="text" value={commentText} onChange={(e) => setCommentText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleComment()} placeholder="РќР°РїРёС€РёС‚Рµ РєРѕРјРјРµРЅС‚Р°СЂРёР№..." className="flex-1 px-4 py-2 rounded-xl bg-accent outline-none text-sm" />
+              <button onClick={handleComment} disabled={!commentText.trim() || sending} className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50">РћС‚РїСЂР°РІРёС‚СЊ</button>
             </div>
           </div>
         )}
@@ -116,3 +121,5 @@ export function PostCard({ post, currentUserId, onToggleLike, onComment, onDelet
     </>
   );
 }
+
+
