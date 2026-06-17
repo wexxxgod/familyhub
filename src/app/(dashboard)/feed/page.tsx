@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
@@ -10,9 +10,7 @@ import toast from "react-hot-toast";
 
 export default function FeedPage() {
   const { data: session } = useSession();
-  const currentUser = (session?.user as any);
-  const currentUserId = currentUser?.id;
-  const currentUserRole = currentUser?.role;
+  const currentUserId = (session?.user as any)?.id;
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -29,7 +27,7 @@ export default function FeedPage() {
         video: p.video,
         document: p.document,
         createdAt: p.createdAt,
-        author: p.author || { name: "РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ", role: "FAMILY_MEMBER" },
+        author: p.author || { name: "Пользователь", role: "FAMILY_MEMBER" },
         comments: p.comments || [],
         commentsCount: p.comments?.length || 0,
         likes: p.likes?.length || 0,
@@ -50,16 +48,16 @@ export default function FeedPage() {
       const newPost = await api.posts.create({ content, image });
       setPosts([{
         ...newPost,
-        author: newPost.author || { name: "Р’С‹", role: "FAMILY_MEMBER" },
+        author: newPost.author || { name: "Вы", role: "FAMILY_MEMBER" },
         comments: [],
         commentsCount: 0,
         likes: 0,
         isLiked: false,
         authorId: newPost.authorId,
       }, ...posts]);
-      toast.success("РџРѕСЃС‚ РѕРїСѓР±Р»РёРєРѕРІР°РЅ");
+      toast.success("Пост опубликован");
     } catch (e) {
-      toast.error("РћС€РёР±РєР° РїСЂРё РїСѓР±Р»РёРєР°С†РёРё");
+      toast.error("Ошибка при публикации");
     }
   };
 
@@ -67,9 +65,9 @@ export default function FeedPage() {
     try {
       await api.posts.delete(id);
       setPosts(posts.filter((p) => p.id !== id));
-      toast.success("РџРѕСЃС‚ СѓРґР°Р»С‘РЅ");
+      toast.success("Пост удалён");
     } catch {
-      toast.error("РћС€РёР±РєР° РїСЂРё СѓРґР°Р»РµРЅРёРё");
+      toast.error("Ошибка при удалении");
     }
   };
 
@@ -95,15 +93,15 @@ export default function FeedPage() {
               ...p,
               comments: [...(p.comments || []), {
                 ...newComment,
-                author: { name: session?.user?.name || "Р’С‹" },
+                author: { name: session?.user?.name || "Вы" },
               }],
               commentsCount: (p.commentsCount || 0) + 1,
             }
           : p
       ));
-      toast.success("РљРѕРјРјРµРЅС‚Р°СЂРёР№ РґРѕР±Р°РІР»РµРЅ");
+      toast.success("Комментарий добавлен");
     } catch (e) {
-      toast.error("РћС€РёР±РєР° РїСЂРё РґРѕР±Р°РІР»РµРЅРёРё РєРѕРјРјРµРЅС‚Р°СЂРёСЏ");
+      toast.error("Ошибка при добавлении комментария");
     }
   };
 
@@ -120,7 +118,7 @@ export default function FeedPage() {
           : p
       ));
     } catch {
-      toast.error("РћС€РёР±РєР° РїСЂРё СѓРґР°Р»РµРЅРёРё РєРѕРјРјРµРЅС‚Р°СЂРёСЏ");
+      toast.error("Ошибка при удалении комментария");
     }
   };
 
@@ -151,8 +149,8 @@ export default function FeedPage() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-        <h1 className="text-3xl font-bold mb-1">РЎРµРјРµР№РЅР°СЏ Р»РµРЅС‚Р°</h1>
-        <p className="text-muted-foreground">Р”РµР»РёС‚РµСЃСЊ СЃРѕР±С‹С‚РёСЏРјРё СЃ Р±Р»РёР·РєРёРјРё</p>
+        <h1 className="text-3xl font-bold mb-1">Семейная лента</h1>
+        <p className="text-muted-foreground">Делитесь событиями с близкими</p>
       </motion.div>
 
       <CreatePost onSubmit={handleCreatePost} />
@@ -164,8 +162,8 @@ export default function FeedPage() {
               <rect x="3" y="3" width="18" height="18" rx="2" /><line x1="9" y1="9" x2="15" y2="15" /><line x1="15" y1="9" x2="9" y2="15" />
             </svg>
           </div>
-          <h3 className="text-lg font-semibold mb-2">Р’ Р»РµРЅС‚Рµ РїРѕРєР° РїСѓСЃС‚Рѕ</h3>
-          <p className="text-muted-foreground text-sm max-w-sm mx-auto">РћРїСѓР±Р»РёРєСѓР№С‚Рµ РїРµСЂРІС‹Р№ РїРѕСЃС‚</p>
+          <h3 className="text-lg font-semibold mb-2">В ленте пока пусто</h3>
+          <p className="text-muted-foreground text-sm max-w-sm mx-auto">Опубликуйте первый пост</p>
         </motion.div>
       ) : (
         <div className="space-y-6 mt-8">
@@ -173,7 +171,7 @@ export default function FeedPage() {
             <motion.div key={post.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
               <PostCard
                 post={post}
-                currentUserId={currentUserId} currentUserRole={currentUserRole}
+                currentUserId={currentUserId}
                 onToggleLike={() => handleToggleLike(post.id)}
                 onComment={(content) => handleComment(post.id, content)}
                 onDelete={handleDeletePost}
@@ -186,4 +184,3 @@ export default function FeedPage() {
     </div>
   );
 }
-

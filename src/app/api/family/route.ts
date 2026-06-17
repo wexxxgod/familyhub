@@ -1,4 +1,4 @@
-﻿import { NextResponse, NextRequest } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser, createSessionToken, setSessionCookie } from "@/lib/auth-helpers";
 import crypto from "crypto";
@@ -41,12 +41,12 @@ export async function POST(req: NextRequest) {
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     if (user.familyId) {
-      return NextResponse.json({ error: "Р’С‹ СѓР¶Рµ РІ СЃРµРјСЊРµ" }, { status: 400 });
+      return NextResponse.json({ error: "Вы уже в семье" }, { status: 400 });
     }
 
     const { name } = await req.json();
     if (!name?.trim()) {
-      return NextResponse.json({ error: "РќР°Р·РІР°РЅРёРµ СЃРµРјСЊРё РѕР±СЏР·Р°С‚РµР»СЊРЅРѕ" }, { status: 400 });
+      return NextResponse.json({ error: "Название семьи обязательно" }, { status: 400 });
     }
 
     const inviteCode = generateInviteCode();
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
 
     await prisma.user.update({
       where: { id: user.id },
-      data: { familyId: family.id, role: "PARENT" },
+      data: { familyId: family.id },
     });
 
     const token = await createSessionToken({
@@ -82,9 +82,9 @@ export async function POST(req: NextRequest) {
     return response;
   } catch (e: any) {
     if (e?.code === "P2002") {
-      return NextResponse.json({ error: "РЎРµРјСЊСЏ СЃ С‚Р°РєРёРј РЅР°Р·РІР°РЅРёРµРј СѓР¶Рµ СЃСѓС‰РµСЃС‚РІСѓРµС‚" }, { status: 409 });
+      return NextResponse.json({ error: "Семья с таким названием уже существует" }, { status: 409 });
     }
-    return NextResponse.json({ error: "РћС€РёР±РєР° СЃРѕР·РґР°РЅРёСЏ СЃРµРјСЊРё" }, { status: 500 });
+    return NextResponse.json({ error: "Ошибка создания семьи" }, { status: 500 });
   }
 }
 
@@ -94,22 +94,22 @@ export async function DELETE(req: NextRequest) {
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     if (!user.familyId) {
-      return NextResponse.json({ error: "Р’С‹ РЅРµ РІ СЃРµРјСЊРµ" }, { status: 400 });
+      return NextResponse.json({ error: "Вы не в семье" }, { status: 400 });
     }
 
     const family = await prisma.family.findUnique({ where: { id: user.familyId } });
     if (!family || family.createdBy !== user.id) {
-      return NextResponse.json({ error: "РўРѕР»СЊРєРѕ СЃРѕР·РґР°С‚РµР»СЊ РјРѕР¶РµС‚ СѓРґР°Р»СЏС‚СЊ СѓС‡Р°СЃС‚РЅРёРєРѕРІ" }, { status: 403 });
+      return NextResponse.json({ error: "Только создатель может удалять участников" }, { status: 403 });
     }
 
     const { userId } = await req.json();
     if (userId === user.id) {
-      return NextResponse.json({ error: "РќРµР»СЊР·СЏ СѓРґР°Р»РёС‚СЊ СЃРµР±СЏ" }, { status: 400 });
+      return NextResponse.json({ error: "Нельзя удалить себя" }, { status: 400 });
     }
 
     const targetUser = await prisma.user.findUnique({ where: { id: userId } });
     if (!targetUser || targetUser.familyId !== user.familyId) {
-      return NextResponse.json({ error: "РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ РЅРµ РЅР°Р№РґРµРЅ РІ СЃРµРјСЊРµ" }, { status: 404 });
+      return NextResponse.json({ error: "Пользователь не найден в семье" }, { status: 404 });
     }
 
     await prisma.user.update({
@@ -119,7 +119,7 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch {
-    return NextResponse.json({ error: "РћС€РёР±РєР° СѓРґР°Р»РµРЅРёСЏ" }, { status: 500 });
+    return NextResponse.json({ error: "Ошибка удаления" }, { status: 500 });
   }
 }
 
@@ -129,12 +129,12 @@ export async function PATCH(req: NextRequest) {
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     if (!user.familyId) {
-      return NextResponse.json({ error: "Р’С‹ РЅРµ РІ СЃРµРјСЊРµ" }, { status: 400 });
+      return NextResponse.json({ error: "Вы не в семье" }, { status: 400 });
     }
 
     const family = await prisma.family.findUnique({ where: { id: user.familyId } });
     if (!family || family.createdBy !== user.id) {
-      return NextResponse.json({ error: "РўРѕР»СЊРєРѕ СЃРѕР·РґР°С‚РµР»СЊ РјРѕР¶РµС‚ РѕР±РЅРѕРІРёС‚СЊ РєРѕРґ" }, { status: 403 });
+      return NextResponse.json({ error: "Только создатель может обновить код" }, { status: 403 });
     }
 
     const inviteCode = generateInviteCode();
@@ -148,4 +148,3 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Failed to regenerate code" }, { status: 500 });
   }
 }
-
