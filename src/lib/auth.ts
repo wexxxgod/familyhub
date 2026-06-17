@@ -3,6 +3,8 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
 
+const log = (...args: any[]) => console.log("[AUTH]", ...args);
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -12,24 +14,24 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Пароль", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
+        try {
+          if (!credentials?.email || !credentials?.password) { log("missing credentials"); return null; }
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
-        });
+          const user = await prisma.user.findUnique({ where: { email: credentials.email } });
+          log("user found:", !!user, !!user?.passwordHash);
 
-        if (!user || !user.passwordHash) return null;
+          if (!user || !user.passwordHash) return null;
 
-        const isValid = await bcrypt.compare(credentials.password, user.passwordHash);
-        if (!isValid) return null;
+          const isValid = await bcrypt.compare(credentials.password, user.passwordHash);
+          log("password valid:", isValid);
 
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          image: user.image,
-          role: user.role,
-        };
+          if (!isValid) return null;
+
+          return { id: user.id, email: user.email, name: user.name, image: user.image, role: user.role };
+        } catch (e) {
+          log("authorize error:", e);
+          return null;
+        }
       },
     }),
   ],
