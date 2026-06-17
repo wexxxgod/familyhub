@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, createSessionToken, setSessionCookie } from "@/lib/auth";
 
 export async function POST(req: Request) {
   try {
@@ -29,9 +29,21 @@ export async function POST(req: Request) {
       data: { familyId: family.id },
     });
 
-    return NextResponse.json({
+    const token = await createSessionToken({
+      id: user.id,
+      role: user.role,
+      email: user.email,
+      name: user.name,
+      image: user.image,
+      familyId: family.id,
+    });
+
+    const response = NextResponse.json({
       family: { id: family.id, name: family.name },
     });
+
+    if (token) setSessionCookie(response, token);
+    return response;
   } catch {
     return NextResponse.json({ error: "Failed to join family" }, { status: 500 });
   }

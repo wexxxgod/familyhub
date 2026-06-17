@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, createSessionToken, setSessionCookie } from "@/lib/auth";
 import crypto from "crypto";
 
 function generateInviteCode(): string {
@@ -64,10 +64,22 @@ export async function POST(req: Request) {
       data: { familyId: family.id },
     });
 
-    return NextResponse.json({
+    const token = await createSessionToken({
+      id: user.id,
+      role: user.role,
+      email: user.email,
+      name: user.name,
+      image: user.image,
+      familyId: family.id,
+    });
+
+    const response = NextResponse.json({
       family: { id: family.id, name: family.name, inviteCode: family.inviteCode },
       inviteCode: family.inviteCode,
     });
+
+    if (token) setSessionCookie(response, token);
+    return response;
   } catch (e: any) {
     if (e?.code === "P2002") {
       return NextResponse.json({ error: "Семья с таким названием уже существует" }, { status: 409 });
