@@ -3,10 +3,14 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { api } from "@/lib/api";
+import { useSession } from "next-auth/react";
+import toast from "react-hot-toast";
 
 const MONTHS = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
 
 export default function CalendarPage() {
+  const { data: session } = useSession();
+  const currentUserId = (session?.user as any)?.id;
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [events, setEvents] = useState<any[]>([]);
@@ -31,13 +35,20 @@ export default function CalendarPage() {
     } catch (e) { console.error(e); }
   };
 
+  const handleDelete = async (id: string) => {
+    try {
+      await api.calendar.delete(id);
+      setEvents(events.filter((e) => e.id !== id));
+      toast.success("Событие удалено");
+    } catch { toast.error("Ошибка при удалении"); }
+  };
+
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   const firstDay = new Date(currentYear, currentMonth, 1).getDay();
   const monthEvents = events.filter((e) => {
     const d = new Date(e.date);
     return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
   });
-
   const eventDays = new Set(monthEvents.map((e) => new Date(e.date).getDate()));
 
   return (
@@ -47,9 +58,7 @@ export default function CalendarPage() {
           <h1 className="text-3xl font-bold mb-1">Семейный календарь</h1>
           <p className="text-muted-foreground">Дни рождения, годовщины и важные даты</p>
         </div>
-        <button onClick={() => setShowCreate(!showCreate)} className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-all">
-          + Событие
-        </button>
+        <button onClick={() => setShowCreate(!showCreate)} className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-all">+ Событие</button>
       </motion.div>
 
       {showCreate && (
@@ -110,9 +119,14 @@ export default function CalendarPage() {
           ) : (
             <div className="space-y-3">
               {monthEvents.map((event) => (
-                <div key={event.id} className="p-3 rounded-xl bg-accent">
+                <div key={event.id} className="p-3 rounded-xl bg-accent relative group">
                   <p className="text-sm font-medium">{event.title}</p>
                   <p className="text-xs text-muted-foreground">{new Date(event.date).toLocaleDateString("ru-RU", { day: "numeric", month: "long" })}</p>
+                  {(currentUserId && event.createdById === currentUserId) && (
+                    <button onClick={() => handleDelete(event.id)} className="absolute top-1 right-1 p-1 rounded-md bg-red-500/10 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/20">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
+                    </button>
+                  )}
                 </div>
               ))}
             </div>

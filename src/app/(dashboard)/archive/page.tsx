@@ -3,11 +3,15 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { api } from "@/lib/api";
+import { useSession } from "next-auth/react";
+import toast from "react-hot-toast";
 
 const CATEGORIES = ["Все", "PHOTO", "VIDEO", "DOCUMENT", "CERTIFICATE", "HEIRLOOM"];
 const CAT_NAMES: Record<string, string> = { PHOTO: "Фото", VIDEO: "Видео", DOCUMENT: "Документы", CERTIFICATE: "Свидетельства", HEIRLOOM: "Реликвии" };
 
 export default function ArchivePage() {
+  const { data: session } = useSession();
+  const currentUserId = (session?.user as any)?.id;
   const [category, setCategory] = useState("Все");
   const [search, setSearch] = useState("");
   const [items, setItems] = useState<any[]>([]);
@@ -19,6 +23,14 @@ export default function ArchivePage() {
       setLoading(false);
     }).catch(() => setLoading(false));
   }, []);
+
+  const handleDelete = async (id: string) => {
+    try {
+      await api.archive.delete(id);
+      setItems(items.filter((item) => item.id !== id));
+      toast.success("Элемент удалён из архива");
+    } catch { toast.error("Ошибка при удалении"); }
+  };
 
   const filtered = items.filter((item) => {
     const matchCategory = category === "Все" || item.category === category;
@@ -67,7 +79,12 @@ export default function ArchivePage() {
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((item, i) => (
-            <motion.div key={item.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="glass-card p-5 hover-lift cursor-pointer">
+            <motion.div key={item.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="glass-card p-5 relative group">
+              {(currentUserId && item.uploadedById === currentUserId) && (
+                <button onClick={() => handleDelete(item.id)} className="absolute top-2 right-2 p-1.5 rounded-lg bg-red-500/10 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/20">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
+                </button>
+              )}
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center mb-3">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-blue-500">
                   <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></svg>

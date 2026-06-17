@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
+import { useState, useEffect } from "react";
+import { api } from "@/lib/api";
 
 const NAV_ITEMS = [
   {
@@ -73,15 +75,22 @@ const NAV_ITEMS = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const [familyName, setFamilyName] = useState("FamilyHub");
+
+  useEffect(() => {
+    api.family.info().then((data) => {
+      if (data.family?.name) setFamilyName(data.family.name);
+    }).catch(() => {});
+  }, []);
 
   return (
     <aside className="fixed left-0 top-0 bottom-0 w-[240px] border-r border-border bg-sidebar hidden lg:flex flex-col z-40">
       <div className="p-5 border-b border-border">
         <Link href="/feed" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shrink-0">
             <span className="text-white font-bold text-sm">F</span>
           </div>
-          <span className="font-semibold text-lg">FamilyHub</span>
+          <span className="font-semibold text-lg truncate">{familyName}</span>
         </Link>
       </div>
 

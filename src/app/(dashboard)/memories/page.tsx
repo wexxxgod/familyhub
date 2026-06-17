@@ -3,8 +3,12 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { api } from "@/lib/api";
+import { useSession } from "next-auth/react";
+import toast from "react-hot-toast";
 
 export default function MemoriesPage() {
+  const { data: session } = useSession();
+  const currentUserId = (session?.user as any)?.id;
   const [memories, setMemories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -14,6 +18,14 @@ export default function MemoriesPage() {
       setLoading(false);
     }).catch(() => setLoading(false));
   }, []);
+
+  const handleDelete = async (id: string) => {
+    try {
+      await api.memories.delete(id);
+      setMemories(memories.filter((m) => m.id !== id));
+      toast.success("Воспоминание удалено");
+    } catch { toast.error("Ошибка при удалении"); }
+  };
 
   if (loading) {
     return <div className="max-w-5xl mx-auto px-4 py-8">
@@ -40,7 +52,12 @@ export default function MemoriesPage() {
       ) : (
         <div className="space-y-4">
           {memories.map((memory, i) => (
-            <motion.div key={memory.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} className="glass-card p-6">
+            <motion.div key={memory.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} className="glass-card p-6 relative group">
+              {(currentUserId && memory.authorId === currentUserId) && (
+                <button onClick={() => handleDelete(memory.id)} className="absolute top-3 right-3 p-1.5 rounded-lg bg-red-500/10 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/20">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
+                </button>
+              )}
               {memory.image && <img src={memory.image} alt="" className="w-full h-48 object-cover rounded-xl mb-4" />}
               <h3 className="font-semibold mb-1">{memory.title}</h3>
               <p className="text-sm text-muted-foreground">{memory.content}</p>

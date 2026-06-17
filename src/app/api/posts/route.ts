@@ -48,3 +48,20 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Failed to create post" }, { status: 500 });
   }
 }
+
+export async function DELETE(req: Request) {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const { id } = await req.json();
+    const post = await prisma.post.findUnique({ where: { id } });
+    if (!post) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (post.authorId !== user.id && user.role !== "SUPER_ADMIN") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+    await prisma.post.delete({ where: { id } });
+    return NextResponse.json({ success: true });
+  } catch {
+    return NextResponse.json({ error: "Failed to delete post" }, { status: 500 });
+  }
+}

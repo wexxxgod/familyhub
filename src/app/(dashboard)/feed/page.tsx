@@ -5,9 +5,12 @@ import { motion } from "framer-motion";
 import { PostCard } from "@/components/feed/PostCard";
 import { CreatePost } from "@/components/feed/CreatePost";
 import { api } from "@/lib/api";
+import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
 
 export default function FeedPage() {
+  const { data: session } = useSession();
+  const currentUserId = (session?.user as any)?.id;
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -15,6 +18,7 @@ export default function FeedPage() {
     try {
       const data = await api.posts.list();
       setPosts(data.map((p: any) => ({
+        ...p,
         id: p.id,
         content: p.content,
         tags: p.tags || [],
@@ -23,18 +27,18 @@ export default function FeedPage() {
         video: p.video,
         document: p.document,
         createdAt: p.createdAt,
-        updatedAt: p.updatedAt,
         author: p.author || { name: "Пользователь", role: "FAMILY_MEMBER" },
         comments: p.comments?.length || 0,
         likes: p.likes?.length || 0,
-        isLiked: false,
+        isLiked: p.likes?.some((l: any) => l.userId === currentUserId) || false,
+        authorId: p.authorId,
       })));
     } catch (e) {
       console.error("Failed to fetch posts:", e);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentUserId]);
 
   useEffect(() => { fetchPosts(); }, [fetchPosts]);
 
@@ -47,10 +51,21 @@ export default function FeedPage() {
         comments: 0,
         likes: 0,
         isLiked: false,
+        authorId: newPost.authorId,
       }, ...posts]);
       toast.success("Пост опубликован");
     } catch (e) {
       toast.error("Ошибка при публикации");
+    }
+  };
+
+  const handleDeletePost = async (id: string) => {
+    try {
+      await api.posts.delete(id);
+      setPosts(posts.filter((p) => p.id !== id));
+      toast.success("Пост удалён");
+    } catch {
+      toast.error("Ошибка при удалении");
     }
   };
 
@@ -113,32 +128,26 @@ export default function FeedPage() {
       <CreatePost onSubmit={handleCreatePost} />
 
       {posts.length === 0 ? (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="mt-12 text-center"
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mt-12 text-center">
           <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center mx-auto mb-4">
             <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-purple-500">
               <rect x="3" y="3" width="18" height="18" rx="2" /><line x1="9" y1="9" x2="15" y2="15" /><line x1="15" y1="9" x2="9" y2="15" />
             </svg>
           </div>
           <h3 className="text-lg font-semibold mb-2">В ленте пока пусто</h3>
-          <p className="text-muted-foreground text-sm max-w-sm mx-auto">
-            Опубликуйте первый пост — расскажите семье о своих новостях
-          </p>
+          <p className="text-muted-foreground text-sm max-w-sm mx-auto">Опубликуйте первый пост</p>
         </motion.div>
       ) : (
         <div className="space-y-6 mt-8">
           {posts.map((post, i) => (
-            <motion.div
-              key={post.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-            >
-              <PostCard post={post} onToggleLike={() => handleToggleLike(post.id)} onComment={(content) => handleComment(post.id, content)} />
+            <motion.div key={post.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+              <PostCard
+                post={post}
+                currentUserId={currentUserId}
+                onToggleLike={() => handleToggleLike(post.id)}
+                onComment={(content) => handleComment(post.id, content)}
+                onDelete={handleDeletePost}
+              />
             </motion.div>
           ))}
         </div>

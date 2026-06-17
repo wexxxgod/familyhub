@@ -36,3 +36,20 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Failed to create archive item" }, { status: 500 });
   }
 }
+
+export async function DELETE(req: Request) {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const { id } = await req.json();
+    const item = await prisma.archiveItem.findUnique({ where: { id } });
+    if (!item) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (item.uploadedById !== user.id && user.role !== "SUPER_ADMIN") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+    await prisma.archiveItem.delete({ where: { id } });
+    return NextResponse.json({ success: true });
+  } catch {
+    return NextResponse.json({ error: "Failed to delete archive item" }, { status: 500 });
+  }
+}

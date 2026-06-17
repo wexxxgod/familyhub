@@ -16,12 +16,14 @@ export const api = {
   posts: {
     list: () => request<any[]>("/api/posts"),
     create: (data: any) => request<any>("/api/posts", { method: "POST", body: JSON.stringify(data) }),
+    delete: (id: string) => request<any>("/api/posts", { method: "DELETE", body: JSON.stringify({ id }) }),
   },
   likes: {
     toggle: (postId: string) => request<{ liked: boolean }>("/api/likes", { method: "POST", body: JSON.stringify({ postId }) }),
   },
   comments: {
     create: (postId: string, content: string) => request<any>("/api/comments", { method: "POST", body: JSON.stringify({ postId, content }) }),
+    delete: (id: string) => request<any>("/api/comments", { method: "DELETE", body: JSON.stringify({ id }) }),
   },
   chat: {
     list: () => request<any[]>("/api/chat"),
@@ -38,15 +40,18 @@ export const api = {
   polls: {
     list: () => request<any[]>("/api/polls"),
     create: (data: any) => request<any>("/api/polls", { method: "POST", body: JSON.stringify(data) }),
+    delete: (id: string) => request<any>("/api/polls", { method: "DELETE", body: JSON.stringify({ id }) }),
     vote: (pollId: string, option: string) => request<any>("/api/polls/vote", { method: "POST", body: JSON.stringify({ pollId, option }) }),
   },
   archive: {
     list: () => request<any[]>("/api/archive"),
     create: (data: any) => request<any>("/api/archive", { method: "POST", body: JSON.stringify(data) }),
+    delete: (id: string) => request<any>("/api/archive", { method: "DELETE", body: JSON.stringify({ id }) }),
   },
   calendar: {
     list: () => request<any[]>("/api/events"),
     create: (data: any) => request<any>("/api/events", { method: "POST", body: JSON.stringify(data) }),
+    delete: (id: string) => request<any>("/api/events", { method: "DELETE", body: JSON.stringify({ id }) }),
   },
   profile: {
     get: () => request<any>("/api/profile"),
@@ -68,6 +73,7 @@ export const api = {
   memories: {
     list: () => request<any[]>("/api/memories"),
     create: (data: any) => request<any>("/api/memories", { method: "POST", body: JSON.stringify(data) }),
+    delete: (id: string) => request<any>("/api/memories", { method: "DELETE", body: JSON.stringify({ id }) }),
   },
   search: {
     query: (q: string) => request<any>(`/api/search?q=${encodeURIComponent(q)}`),
