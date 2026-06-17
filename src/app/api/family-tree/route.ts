@@ -6,12 +6,14 @@ export async function GET() {
   try {
     const user = await getCurrentUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    const capsules = await prisma.timeCapsule.findMany({
+
+    const members = await prisma.familyMember.findMany({
       orderBy: { createdAt: "desc" },
     });
-    return NextResponse.json(capsules);
+
+    return NextResponse.json(members);
   } catch {
-    return NextResponse.json({ error: "Failed to fetch capsules" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch family tree" }, { status: 500 });
   }
 }
 
@@ -19,17 +21,20 @@ export async function POST(req: Request) {
   try {
     const user = await getCurrentUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const data = await req.json();
-    const capsule = await prisma.timeCapsule.create({
+    const member = await prisma.familyMember.create({
       data: {
-        title: data.title,
-        message: data.message,
-        openDate: new Date(data.openDate),
-        authorId: user.id,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        middleName: data.middleName,
+        dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : null,
+        parentId: data.parentId || null,
       },
     });
-    return NextResponse.json(capsule);
+
+    return NextResponse.json(member);
   } catch {
-    return NextResponse.json({ error: "Failed to create capsule" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to create member" }, { status: 500 });
   }
 }

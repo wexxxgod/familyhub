@@ -2,40 +2,40 @@
 
 import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
-import { useUploadThing } from "@/lib/uploadthing";
+import { api } from "@/lib/api";
 import toast from "react-hot-toast";
 
 interface FileUploadProps {
-  endpoint: "imageUploader" | "attachmentUploader";
   onUploadComplete: (urls: string[]) => void;
   label?: string;
+  multiple?: boolean;
 }
 
-export function FileUpload({ endpoint, onUploadComplete, label }: FileUploadProps) {
+export function FileUpload({ onUploadComplete, label, multiple }: FileUploadProps) {
   const [uploading, setUploading] = useState(false);
-  const { startUpload } = useUploadThing(endpoint, {
-    onClientUploadComplete: (res) => {
-      const urls = res.map((r) => r.url);
-      onUploadComplete(urls);
-      setUploading(false);
-      toast.success("Файл загружен");
-    },
-    onUploadError: () => {
-      toast.error("Ошибка загрузки");
-      setUploading(false);
-    },
-  });
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length === 0) return;
     setUploading(true);
-    await startUpload(acceptedFiles);
-  }, [startUpload]);
+    try {
+      const urls: string[] = [];
+      for (const file of acceptedFiles) {
+        const res = await api.upload.file(file);
+        urls.push(res.url);
+      }
+      onUploadComplete(urls);
+      toast.success("Файл загружен");
+    } catch {
+      toast.error("Ошибка загрузки");
+    } finally {
+      setUploading(false);
+    }
+  }, [onUploadComplete]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    maxFiles: endpoint === "imageUploader" ? 5 : 10,
-    maxSize: endpoint === "imageUploader" ? 8 * 1024 * 1024 : 32 * 1024 * 1024,
+    maxFiles: multiple ? 10 : 1,
+    maxSize: 8 * 1024 * 1024,
   });
 
   return (

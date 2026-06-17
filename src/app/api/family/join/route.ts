@@ -1,0 +1,38 @@
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
+
+export async function POST(req: Request) {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    if (user.familyId) {
+      return NextResponse.json({ error: "Вы уже в семье" }, { status: 400 });
+    }
+
+    const { inviteCode } = await req.json();
+    if (!inviteCode?.trim()) {
+      return NextResponse.json({ error: "Введите код приглашения" }, { status: 400 });
+    }
+
+    const family = await prisma.family.findUnique({
+      where: { inviteCode: inviteCode.trim().toUpperCase() },
+    });
+
+    if (!family) {
+      return NextResponse.json({ error: "Неверный код приглашения" }, { status: 404 });
+    }
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { familyId: family.id },
+    });
+
+    return NextResponse.json({
+      family: { id: family.id, name: family.name },
+    });
+  } catch {
+    return NextResponse.json({ error: "Failed to join family" }, { status: 500 });
+  }
+}

@@ -1,18 +1,37 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import crypto from "crypto";
+
+function generateInviteCode(): string {
+  return crypto.randomBytes(4).toString("hex").toUpperCase();
+}
 
 export async function GET() {
   try {
     const user = await getCurrentUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    const members = await prisma.familyMember.findMany();
-    const users = await prisma.user.findMany({
-      select: { id: true, name: true, email: true, image: true, role: true, createdAt: true },
+
+    if (!user.familyId) {
+      return NextResponse.json({ family: null, members: [], isCreator: false });
+    }
+
+    const family = await prisma.family.findUnique({
+      where: { id: user.familyId },
+      include: { members: { select: { id: true, name: true, email: true, image: true, role: true, createdAt: true } } },
     });
-    return NextResponse.json({ members, users });
+
+    if (!family) {
+      return NextResponse.json({ family: null, members: [], isCreator: false });
+    }
+
+    return NextResponse.json({
+      family: { id: family.id, name: family.name, inviteCode: family.inviteCode, createdAt: family.createdAt },
+      members: family.members,
+      isCreator: family.createdBy === user.id,
+    });
   } catch {
-    return NextResponse.json({ error: "Failed to fetch family data" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch family" }, { status: 500 });
   }
 }
 
@@ -20,24 +39,62 @@ export async function POST(req: Request) {
   try {
     const user = await getCurrentUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    const data = await req.json();
-    const member = await prisma.familyMember.create({
+
+    if (user.familyId) {
+      return NextResponse.json({ error: "Вы уже в семье" }, { status: 400 });
+    }
+
+    const { name } = await req.json();
+    if (!name?.trim()) {
+      return NextResponse.json({ error: "Название семьи обязательно" }, { status: 400 });
+    }
+
+    const inviteCode = generateInviteCode();
+
+    const family = await prisma.family.create({
       data: {
-        firstName: data.firstName,
-        lastName: data.lastName,
-        middleName: data.middleName,
-        dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : null,
-        photo: data.photo,
-        bio: data.bio,
-        birthplace: data.birthplace,
-        location: data.location,
-        latitude: data.latitude ? parseFloat(data.latitude) : null,
-        longitude: data.longitude ? parseFloat(data.longitude) : null,
-        parentId: data.parentId || null,
+        name: name.trim(),
+        inviteCode,
+        createdBy: user.id,
       },
     });
-    return NextResponse.json(member);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { familyId: family.id },
+    });
+
+    return NextResponse.json({
+      family: { id: family.id, name: family.name, inviteCode: family.inviteCode },
+      inviteCode: family.inviteCode,
+    });
   } catch {
-    return NextResponse.json({ error: "Failed to create member" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to create family" }, { status: 500 });
+  }
+}
+
+export async function PATCH() {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    if (!user.familyId) {
+      return NextResponse.json({ error: "Вы не в семье" }, { status: 400 });
+    }
+
+    const family = await prisma.family.findUnique({ where: { id: user.familyId } });
+    if (!family || family.createdBy !== user.id) {
+      return NextResponse.json({ error: "Только создатель может обновить код" }, { status: 403 });
+    }
+
+    const inviteCode = generateInviteCode();
+    await prisma.family.update({
+      where: { id: user.familyId },
+      data: { inviteCode },
+    });
+
+    return NextResponse.json({ inviteCode });
+  } catch {
+    return NextResponse.json({ error: "Failed to regenerate code" }, { status: 500 });
   }
 }

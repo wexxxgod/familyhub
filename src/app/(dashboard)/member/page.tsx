@@ -10,7 +10,7 @@ export default function MemberPage() {
   const [profile, setProfile] = useState<any>(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ name: "", bio: "", phone: "" });
-  const [stats, setStats] = useState({ posts: 0, achievements: 0, likes: 0 });
+  const [stats, setStats] = useState({ posts: 0, comments: 0, likes: 0 });
 
   useEffect(() => {
     api.profile.get().then((data) => {
@@ -69,7 +69,7 @@ export default function MemberPage() {
           <div className="space-y-4">
             {[
               { label: "Посты", value: stats.posts },
-              { label: "Достижения", value: stats.achievements },
+              { label: "Комментарии", value: stats.comments },
               { label: "Лайки", value: stats.likes },
             ].map((stat) => (
               <div key={stat.label} className="flex items-center justify-between">

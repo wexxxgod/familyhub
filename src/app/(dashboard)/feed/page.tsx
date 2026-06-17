@@ -38,9 +38,9 @@ export default function FeedPage() {
 
   useEffect(() => { fetchPosts(); }, [fetchPosts]);
 
-  const handleCreatePost = async (content: string) => {
+  const handleCreatePost = async (content: string, image?: string) => {
     try {
-      const newPost = await api.posts.create({ content });
+      const newPost = await api.posts.create({ content, image });
       setPosts([{
         ...newPost,
         author: newPost.author || { name: "Вы", role: "FAMILY_MEMBER" },

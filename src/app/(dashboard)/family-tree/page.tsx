@@ -11,8 +11,8 @@ export default function FamilyTreePage() {
   const [form, setForm] = useState({ firstName: "", lastName: "", middleName: "", dateOfBirth: "", parentId: "" });
 
   useEffect(() => {
-    api.family.list().then((data) => {
-      setMembers(data.members || []);
+    api.familyTree.list().then((data) => {
+      setMembers(data || []);
       setLoading(false);
     }).catch(() => setLoading(false));
   }, []);
@@ -20,7 +20,7 @@ export default function FamilyTreePage() {
   const handleAdd = async () => {
     if (!form.firstName.trim() || !form.lastName.trim()) return;
     try {
-      const member = await api.family.create(form);
+      const member = await api.familyTree.create(form);
       setMembers([...members, member]);
       setForm({ firstName: "", lastName: "", middleName: "", dateOfBirth: "", parentId: "" });
       setShowAdd(false);

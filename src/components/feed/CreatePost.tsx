@@ -2,21 +2,42 @@
 
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { api } from "@/lib/api";
+import toast from "react-hot-toast";
 
 interface CreatePostProps {
-  onSubmit: (content: string) => void;
+  onSubmit: (content: string, image?: string) => void;
 }
 
 export function CreatePost({ onSubmit }: CreatePostProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [content, setContent] = useState("");
+  const [image, setImage] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSubmit = () => {
     if (!content.trim()) return;
-    onSubmit(content.trim());
+    onSubmit(content.trim(), image || undefined);
     setContent("");
+    setImage(null);
     setIsExpanded(false);
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const res = await api.upload.file(file);
+      setImage(res.url);
+      toast.success("Фото загружено");
+    } catch {
+      toast.error("Ошибка загрузки фото");
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
@@ -56,34 +77,52 @@ export function CreatePost({ onSubmit }: CreatePostProps) {
             autoFocus
           />
 
+          {image && (
+            <div className="relative mt-3">
+              <img src={image} alt="preview" className="w-full h-48 object-cover rounded-xl" />
+              <button
+                onClick={() => setImage(null)}
+                className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/50 text-white hover:bg-black/70 transition-colors"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+              </button>
+            </div>
+          )}
+
           <div className="flex items-center justify-between mt-4">
             <div className="flex gap-2">
-              <button className="p-2 rounded-lg hover:bg-accent text-muted-foreground transition-colors" title="Добавить фото">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
-                </svg>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="p-2 rounded-lg hover:bg-accent text-muted-foreground transition-colors disabled:opacity-50"
+                title="Добавить фото"
+              >
+                {uploading ? (
+                  <div className="w-4 h-4 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
+                  </svg>
+                )}
               </button>
-              <button className="p-2 rounded-lg hover:bg-accent text-muted-foreground transition-colors" title="Добавить видео">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polygon points="23 7 16 12 23 17 23 7" /><rect x="1" y="5" width="15" height="14" rx="2" />
-                </svg>
-              </button>
-              <button className="p-2 rounded-lg hover:bg-accent text-muted-foreground transition-colors" title="Добавить документ">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" />
-                </svg>
-              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleImageUpload}
+              />
             </div>
             <div className="flex gap-2">
               <button
-                onClick={() => { setIsExpanded(false); setContent(""); }}
+                onClick={() => { setIsExpanded(false); setContent(""); setImage(null); }}
                 className="px-4 py-2 rounded-xl text-sm hover:bg-accent transition-colors"
               >
                 Отмена
               </button>
               <button
                 onClick={handleSubmit}
-                disabled={!content.trim()}
+                disabled={!content.trim() || uploading}
                 className="px-5 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-all disabled:opacity-50"
               >
                 Опубликовать

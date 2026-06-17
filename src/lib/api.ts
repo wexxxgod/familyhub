@@ -35,10 +35,6 @@ export const api = {
     list: () => request<any[]>("/api/notifications"),
     markRead: (id: string) => request<any>("/api/notifications", { method: "PATCH", body: JSON.stringify({ id }) }),
   },
-  budget: {
-    list: () => request<{ entries: any[]; goals: any[] }>("/api/budget"),
-    create: (data: any) => request<any>("/api/budget", { method: "POST", body: JSON.stringify(data) }),
-  },
   polls: {
     list: () => request<any[]>("/api/polls"),
     create: (data: any) => request<any>("/api/polls", { method: "POST", body: JSON.stringify(data) }),
@@ -52,17 +48,19 @@ export const api = {
     list: () => request<any[]>("/api/events"),
     create: (data: any) => request<any>("/api/events", { method: "POST", body: JSON.stringify(data) }),
   },
-  capsules: {
-    list: () => request<any[]>("/api/capsules"),
-    create: (data: any) => request<any>("/api/capsules", { method: "POST", body: JSON.stringify(data) }),
-  },
   profile: {
     get: () => request<any>("/api/profile"),
     update: (data: any) => request<any>("/api/profile", { method: "PATCH", body: JSON.stringify(data) }),
   },
   family: {
-    list: () => request<{ members: any[]; users: any[] }>("/api/family"),
-    create: (data: any) => request<any>("/api/family", { method: "POST", body: JSON.stringify(data) }),
+    info: () => request<{ family: any; members: any[]; isCreator: boolean }>("/api/family"),
+    create: (data: { name: string }) => request<{ family: any; inviteCode: string }>("/api/family", { method: "POST", body: JSON.stringify(data) }),
+    join: (data: { inviteCode: string }) => request<{ family: any }>("/api/family/join", { method: "POST", body: JSON.stringify(data) }),
+    regenerateCode: () => request<{ inviteCode: string }>("/api/family", { method: "PATCH" }),
+  },
+  familyTree: {
+    list: () => request<any[]>("/api/family-tree"),
+    create: (data: any) => request<any>("/api/family-tree", { method: "POST", body: JSON.stringify(data) }),
   },
   members: {
     list: () => request<any[]>("/api/members"),

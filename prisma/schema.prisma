@@ -41,9 +41,16 @@ enum PollStatus {
   CLOSED
 }
 
-enum TimeCapsuleStatus {
-  SEALED
-  OPENED
+model Family {
+  id         String   @id @default(cuid())
+  name       String
+  inviteCode String   @unique
+  createdAt  DateTime @default(now())
+
+  createdBy String
+  members   User[]
+
+  @@map("families")
 }
 
 model User {
@@ -56,6 +63,8 @@ model User {
   bio           String?
   phone         String?
   dateOfBirth   DateTime?
+  familyId      String?
+  family        Family?  @relation(fields: [familyId], references: [id])
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -66,13 +75,10 @@ model User {
   messagesReceived  Message[]  @relation("ChatMessages")
   chatMemberships   ChatRoomMember[]
   notifications Notification[]
-  achievements  Achievement[]
   pollVotes     PollVote[]
   events        Event[]
   archiveItems  ArchiveItem[]
   memories      Memory[]
-  timeCapsules  TimeCapsule[]
-  budgetEntries BudgetEntry[]
   polls         Poll[]
   activityLogs  ActivityLog[]
 
@@ -235,48 +241,6 @@ model Memory {
   @@map("memories")
 }
 
-model TimeCapsule {
-  id        String             @id @default(cuid())
-  title     String
-  message   String
-  image     String?
-  openDate  DateTime
-  status    TimeCapsuleStatus  @default(SEALED)
-  createdAt DateTime           @default(now())
-  openedAt  DateTime?
-
-  authorId String
-  author   User   @relation(fields: [authorId], references: [id])
-
-  @@map("time_capsules")
-}
-
-model BudgetEntry {
-  id          String   @id @default(cuid())
-  title       String
-  amount      Float
-  type        String   @default("expense")
-  category    String
-  description String?
-  date        DateTime @default(now())
-
-  authorId String
-  author   User   @relation(fields: [authorId], references: [id])
-
-  @@map("budget_entries")
-}
-
-model BudgetGoal {
-  id            String   @id @default(cuid())
-  title         String
-  targetAmount  Float
-  currentAmount Float   @default(0)
-  deadline      DateTime?
-  createdAt     DateTime @default(now())
-
-  @@map("budget_goals")
-}
-
 model Poll {
   id        String     @id @default(cuid())
   question  String
@@ -304,21 +268,6 @@ model PollVote {
 
   @@unique([pollId, userId])
   @@map("poll_votes")
-}
-
-model Achievement {
-  id          String   @id @default(cuid())
-  title       String
-  description String?
-  image       String?
-  date        DateTime?
-  category    String   @default("general")
-  createdAt   DateTime @default(now())
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id])
-
-  @@map("achievements")
 }
 
 model Notification {

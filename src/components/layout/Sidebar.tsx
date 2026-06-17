@@ -34,15 +34,6 @@ const NAV_ITEMS = [
     ),
   },
   {
-    label: "Карта семьи",
-    href: "/map",
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
-      </svg>
-    ),
-  },
-  {
     label: "Календарь",
     href: "/calendar",
     icon: (
@@ -70,38 +61,11 @@ const NAV_ITEMS = [
     ),
   },
   {
-    label: "Капсула времени",
-    href: "/time-capsule",
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" />
-      </svg>
-    ),
-  },
-  {
-    label: "Бюджет",
-    href: "/budget",
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-      </svg>
-    ),
-  },
-  {
     label: "Голосования",
     href: "/polls",
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
-      </svg>
-    ),
-  },
-  {
-    label: "Достижения",
-    href: "/achievements",
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="8" r="7" /><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" />
       </svg>
     ),
   },
