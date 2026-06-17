@@ -5,12 +5,13 @@ import { motion } from "framer-motion";
 import { PostCard } from "@/components/feed/PostCard";
 import { CreatePost } from "@/components/feed/CreatePost";
 import { api } from "@/lib/api";
-import { useSession } from "next-auth/react";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import toast from "react-hot-toast";
 
 export default function FeedPage() {
-  const { data: session } = useSession();
-  const currentUserId = (session?.user as any)?.id;
+  const { user } = useCurrentUser();
+  const currentUserId = user?.id;
+  const currentUserRole = user?.role;
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -93,7 +94,7 @@ export default function FeedPage() {
               ...p,
               comments: [...(p.comments || []), {
                 ...newComment,
-                author: { name: session?.user?.name || "Вы" },
+                author: { name: user?.name || "Вы" },
               }],
               commentsCount: (p.commentsCount || 0) + 1,
             }

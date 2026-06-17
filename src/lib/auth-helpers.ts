@@ -44,6 +44,19 @@ export function setSessionCookie(response: NextResponse, token: string): void {
     secure: process.env.NODE_ENV === "production",
     maxAge: COOKIE_MAX_AGE,
   });
+  const isSecure = process.env.NODE_ENV === "production";
+  response.headers.set(
+    "Set-Cookie",
+    `${COOKIE_NAME}=${token}; HttpOnly; SameSite=Lax; Path=/; ${isSecure ? "Secure; " : ""}Max-Age=${COOKIE_MAX_AGE}`
+  );
+}
+
+export function clearSessionCookie(response: NextResponse): void {
+  response.cookies.set(COOKIE_NAME, "", { httpOnly: true, path: "/", maxAge: 0 });
+  response.headers.set(
+    "Set-Cookie",
+    `${COOKIE_NAME}=; HttpOnly; Path=/; Max-Age=0`
+  );
 }
 
 function getTokenFromHeaders(): string | null {

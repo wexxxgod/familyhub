@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
-import { useSession } from "next-auth/react";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 const NAV_ITEMS = [
   {
@@ -76,8 +76,7 @@ const NAV_ITEMS = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { data: session } = useSession();
-  const sessionUser = session?.user as any;
+  const { user: sessionUser } = useCurrentUser();
   const [familyName, setFamilyName] = useState("FamilyHub");
 
   useEffect(() => {

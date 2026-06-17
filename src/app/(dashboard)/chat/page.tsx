@@ -2,12 +2,12 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
-import { useSession } from "next-auth/react";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { api } from "@/lib/api";
 
 export default function ChatPage() {
-  const { data: session } = useSession();
-  const currentUserId = (session?.user as any)?.id;
+  const { user } = useCurrentUser();
+  const currentUserId = user?.id;
   const [contacts, setContacts] = useState<any[]>([]);
   const [selectedContact, setSelectedContact] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
@@ -49,7 +49,7 @@ export default function ChatPage() {
     if (!input.trim() || !selectedContact) return;
     try {
       const msg = await api.chat.send({ content: input.trim(), receiverId: selectedContact.id });
-      setMessages([...messages, { ...msg, sender: { id: currentUserId, name: session?.user?.name }, senderId: currentUserId, receiverId: selectedContact.id }]);
+      setMessages([...messages, { ...msg, sender: { id: currentUserId, name: user?.name }, senderId: currentUserId, receiverId: selectedContact.id }]);
       setInput("");
     } catch (e) { console.error(e); }
   };

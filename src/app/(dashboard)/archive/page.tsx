@@ -3,15 +3,15 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { api } from "@/lib/api";
-import { useSession } from "next-auth/react";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import toast from "react-hot-toast";
 
 const CATEGORIES = ["Все", "PHOTO", "VIDEO", "DOCUMENT", "CERTIFICATE", "HEIRLOOM"];
 const CAT_NAMES: Record<string, string> = { PHOTO: "Фото", VIDEO: "Видео", DOCUMENT: "Документы", CERTIFICATE: "Свидетельства", HEIRLOOM: "Реликвии" };
 
 export default function ArchivePage() {
-  const { data: session } = useSession();
-  const currentUserId = (session?.user as any)?.id;
+  const { user } = useCurrentUser();
+  const currentUserId = user?.id;
   const [category, setCategory] = useState("Все");
   const [search, setSearch] = useState("");
   const [items, setItems] = useState<any[]>([]);

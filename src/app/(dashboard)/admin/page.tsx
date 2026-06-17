@@ -3,13 +3,13 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { api } from "@/lib/api";
-import { useSession } from "next-auth/react";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import toast from "react-hot-toast";
 
 const TABS = ["Обзор", "Пользователи", "Настройки"];
 
 export default function AdminPage() {
-  const { data: session } = useSession();
+  const { user } = useCurrentUser();
   const [tab, setTab] = useState("Обзор");
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -51,7 +51,7 @@ export default function AdminPage() {
       ]
     : [];
 
-  const currentUser = (session?.user as any) || {};
+  const currentUser = user as any || {};
   const members = familyInfo?.members || [];
 
   return (

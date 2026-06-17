@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { useSession, signOut } from "next-auth/react";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useRouter } from "next/navigation";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { getInitials, getAvatarColor } from "@/lib/utils";
@@ -10,7 +10,7 @@ import { useStore } from "@/store";
 import { api } from "@/lib/api";
 
 export function DashboardHeader() {
-  const { data: session } = useSession();
+  const { user: sessionUser } = useCurrentUser();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
@@ -36,6 +36,11 @@ export function DashboardHeader() {
     }, 300);
     return () => clearTimeout(t);
   }, [searchQuery]);
+
+  const handleLogout = async () => {
+    try { await fetch("/api/auth/logout", { method: "POST" }); } catch {}
+    window.location.href = "/";
+  };
 
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-xl">
@@ -133,11 +138,11 @@ export function DashboardHeader() {
 
           <div className="relative">
             <button onClick={() => setMenuOpen(!menuOpen)} className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-accent transition-colors">
-              {session?.user?.image ? (
-                <img src={session.user.image} alt="" className="w-8 h-8 rounded-xl object-cover" />
+              {sessionUser?.image ? (
+                <img src={sessionUser?.image} alt="" className="w-8 h-8 rounded-xl object-cover" />
               ) : (
-                <div className={`w-8 h-8 rounded-xl bg-gradient-to-br ${getAvatarColor(session?.user?.name || "User")} flex items-center justify-center text-white font-bold text-sm`}>
-                  {getInitials(session?.user?.name || "U")}
+                <div className={`w-8 h-8 rounded-xl bg-gradient-to-br ${getAvatarColor(sessionUser?.name || "User")} flex items-center justify-center text-white font-bold text-sm`}>
+                  {getInitials(sessionUser?.name || "U")}
                 </div>
               )}
             </button>
@@ -147,11 +152,11 @@ export function DashboardHeader() {
                 <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
                 <div className="absolute right-0 top-full mt-2 w-56 glass-card p-2 z-50">
                   <div className="px-3 py-2 border-b border-border mb-2">
-                    <p className="font-medium text-sm">{session?.user?.name}</p>
-                    <p className="text-xs text-muted-foreground">{session?.user?.email}</p>
+                    <p className="font-medium text-sm">{sessionUser?.name}</p>
+                    <p className="text-xs text-muted-foreground">{sessionUser?.email}</p>
                   </div>
                   <Link href="/member" className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-accent transition-colors" onClick={() => setMenuOpen(false)}>Мой профиль</Link>
-                  <button onClick={() => signOut({ callbackUrl: "/" })} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-red-500 hover:bg-red-500/10 transition-colors w-full">Выйти</button>
+                  <button onClick={() => handleLogout} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-red-500 hover:bg-red-500/10 transition-colors w-full">Выйти</button>
                 </div>
               </>
             )}

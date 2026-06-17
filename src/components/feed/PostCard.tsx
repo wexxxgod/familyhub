@@ -7,19 +7,20 @@ import { ImageViewer } from "@/components/shared/ImageViewer";
 interface PostCardProps {
   post: any;
   currentUserId?: string;
+  currentUserRole?: string;
   onToggleLike: () => void;
   onComment: (content: string) => Promise<void>;
   onDelete?: (id: string) => void;
   onDeleteComment?: (commentId: string) => void;
 }
 
-export function PostCard({ post, currentUserId, onToggleLike, onComment, onDelete, onDeleteComment }: PostCardProps) {
+export function PostCard({ post, currentUserId, currentUserRole, onToggleLike, onComment, onDelete, onDeleteComment }: PostCardProps) {
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [sending, setSending] = useState(false);
   const [viewImage, setViewImage] = useState<string | null>(null);
 
-  const canDelete = currentUserId && (post.authorId === currentUserId || post.author?.id === currentUserId);
+  const canDelete = currentUserId && (post.authorId === currentUserId || post.author?.id === currentUserId || currentUserRole === "PARENT");
 
   const handleComment = async () => {
     if (!commentText.trim() || sending) return;

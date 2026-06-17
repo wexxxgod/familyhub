@@ -3,11 +3,11 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { api } from "@/lib/api";
-import { useSession } from "next-auth/react";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import toast from "react-hot-toast";
 
 export default function MemberPage() {
-  const { data: session, update: updateSession } = useSession();
+  const { user, refresh } = useCurrentUser();
   const [profile, setProfile] = useState<any>(null);
   const [familyInfo, setFamilyInfo] = useState<any>(null);
   const [saving, setSaving] = useState(false);
@@ -62,7 +62,7 @@ export default function MemberPage() {
       const res = await api.upload.file(file);
       await api.profile.update({ image: res.url });
       setProfile({ ...profile, image: res.url });
-      await updateSession();
+      await refresh();
       toast.success("Аватар обновлён");
     } catch {
       toast.error("Ошибка загрузки аватара");
@@ -86,7 +86,7 @@ export default function MemberPage() {
               {profile?.image ? (
                 <img src={profile.image} alt="" className="w-full h-full object-cover" />
               ) : (
-                (profile?.name?.[0] || session?.user?.name?.[0] || "В")
+                (profile?.name?.[0] || user?.name?.[0] || "В")
               )}
             </div>
             <button
@@ -105,8 +105,8 @@ export default function MemberPage() {
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
           </div>
           <div>
-            <h1 className="text-3xl font-bold">{profile?.name || session?.user?.name || "Ваш профиль"}</h1>
-            <p className="text-muted-foreground">{profile?.email || session?.user?.email}</p>
+            <h1 className="text-3xl font-bold">{profile?.name || user?.name || "Ваш профиль"}</h1>
+            <p className="text-muted-foreground">{profile?.email || user?.email}</p>
           </div>
         </div>
       </motion.div>
@@ -164,7 +164,7 @@ export default function MemberPage() {
             <p className="text-xs text-muted-foreground mb-2">Участники семьи</p>
             <div className="space-y-2">
               {(familyInfo?.members || []).map((m: any) => {
-                const isSelf = m.id === (session?.user as any)?.id;
+                const isSelf = m.id === user?.id;
                 return (
                   <div key={m.id} className="flex items-center gap-2 text-sm group">
                     <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-[10px] font-bold shrink-0">
