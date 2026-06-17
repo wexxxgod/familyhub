@@ -2,30 +2,35 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { api } from "@/lib/api";
 
 export function FamilyGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [ready, setReady] = useState(false);
-  const checkedRef = useRef(false);
+  const startedRef = useRef(false);
 
   useEffect(() => {
-    if (checkedRef.current) return;
+    if (startedRef.current) return;
     if (pathname === "/family-setup") {
       setReady(true);
       return;
     }
 
+    startedRef.current = true;
     let cancelled = false;
     let retries = 0;
-    const MAX_RETRIES = 30;
 
     async function check() {
       try {
-        const data = await api.family.info();
+        const res = await fetch("/api/family");
         if (cancelled) return;
-        checkedRef.current = true;
+
+        if (res.status === 401) {
+          window.location.href = "/login";
+          return;
+        }
+
+        const data = await res.json();
         if (!data.family) {
           router.replace("/family-setup");
         } else {
@@ -34,11 +39,11 @@ export function FamilyGuard({ children }: { children: React.ReactNode }) {
       } catch {
         if (cancelled) return;
         retries++;
-        if (retries >= MAX_RETRIES) {
-          router.replace("/family-setup");
-          return;
+        if (retries >= 10) {
+          window.location.href = "/login";
+        } else {
+          setTimeout(check, 500);
         }
-        setTimeout(check, 500);
       }
     }
 

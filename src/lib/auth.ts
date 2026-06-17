@@ -128,15 +128,22 @@ async function decodeSessionCookie(): Promise<any | null> {
 
 export async function getCurrentUser() {
   const payload = await decodeSessionCookie();
-  if (!payload?.email) return null;
+  if (!payload?.id) return null;
+
+  const dbUser = await prisma.user.findUnique({
+    where: { id: payload.id as string },
+    select: { id: true, email: true, name: true, image: true, role: true, familyId: true },
+  });
+
+  if (!dbUser) return null;
 
   return {
-    id: payload.id as string,
-    email: payload.email as string,
-    name: payload.name as string | null,
-    image: payload.picture as string | null,
-    role: payload.role as string || "FAMILY_MEMBER",
-    familyId: payload.familyId as string | null,
+    id: dbUser.id,
+    email: dbUser.email,
+    name: dbUser.name,
+    image: dbUser.image,
+    role: dbUser.role,
+    familyId: dbUser.familyId,
   };
 }
 
