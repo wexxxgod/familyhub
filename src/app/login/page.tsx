@@ -5,8 +5,10 @@ import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -18,9 +20,20 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await signIn("credentials", { email, password, callbackUrl: "/feed" });
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      if (res.ok) {
+        router.push("/feed");
+        router.refresh();
+      } else {
+        const data = await res.json();
+        setError(data.error === "invalid credentials" ? "Неверный email или пароль" : "Ошибка входа. Попробуйте позже.");
+      }
     } catch {
-      setError("Ошибка входа. Попробуйте позже.");
+      setError("Ошибка сети. Попробуйте позже.");
     } finally {
       setLoading(false);
     }
