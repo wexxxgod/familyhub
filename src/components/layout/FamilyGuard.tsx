@@ -18,6 +18,8 @@ export function FamilyGuard({ children }: { children: React.ReactNode }) {
     }
 
     let cancelled = false;
+    let retries = 0;
+    const MAX_RETRIES = 30;
 
     async function check() {
       try {
@@ -31,6 +33,11 @@ export function FamilyGuard({ children }: { children: React.ReactNode }) {
         }
       } catch {
         if (cancelled) return;
+        retries++;
+        if (retries >= MAX_RETRIES) {
+          router.replace("/family-setup");
+          return;
+        }
         setTimeout(check, 500);
       }
     }

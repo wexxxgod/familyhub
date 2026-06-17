@@ -2,6 +2,9 @@ import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
+import { jwtDecrypt } from "jose";
+import { createHash } from "crypto";
+import { cookies } from "next/headers";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -13,13 +16,10 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
-
         const user = await prisma.user.findUnique({ where: { email: credentials.email } });
         if (!user || !user.passwordHash) return null;
-
         const isValid = await bcrypt.compare(credentials.password, user.passwordHash);
         if (!isValid) return null;
-
         return {
           id: user.id,
           email: user.email,
@@ -64,24 +64,43 @@ export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
 };
 
-let cachedAuthSession: any = null;
+const COOKIE_NAME_SECURE = "__Secure-next-auth.session-token";
+const COOKIE_NAME_INSECURE = "next-auth.session-token";
 
-export function getAuthSession() {
-  return import("next-auth").then(({ getServerSession }) => getServerSession(authOptions));
+function getCookieName(): string {
+  return process.env.NODE_ENV === "production" ? COOKIE_NAME_SECURE : COOKIE_NAME_INSECURE;
+}
+
+function getSecretKey(): Uint8Array | null {
+  const secret = process.env.NEXTAUTH_SECRET;
+  if (!secret) return null;
+  return new Uint8Array(createHash("sha256").update(secret).digest());
+}
+
+async function decodeSessionCookie(): Promise<any | null> {
+  try {
+    const token = cookies().get(getCookieName())?.value;
+    if (!token) return null;
+    const key = getSecretKey();
+    if (!key) return null;
+    const { payload } = await jwtDecrypt(token, key);
+    return payload;
+  } catch {
+    return null;
+  }
 }
 
 export async function getCurrentUser() {
-  const session = await getAuthSession();
-  if (!session?.user?.email) return null;
+  const payload = await decodeSessionCookie();
+  if (!payload?.email) return null;
 
-  const sUser = session.user as any;
   return {
-    id: sUser.id,
-    email: sUser.email,
-    name: sUser.name || null,
-    image: sUser.image || null,
-    role: sUser.role || "FAMILY_MEMBER",
-    familyId: sUser.familyId || null,
+    id: payload.id as string,
+    email: payload.email as string,
+    name: payload.name as string | null,
+    image: payload.picture as string | null,
+    role: payload.role as string || "FAMILY_MEMBER",
+    familyId: payload.familyId as string | null,
   };
 }
 

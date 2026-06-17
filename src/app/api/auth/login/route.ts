@@ -45,6 +45,7 @@ export async function POST(req: Request) {
       email: user.email,
       name: user.name,
       picture: user.image,
+      familyId: user.familyId,
       sub: user.id,
     }, secret);
 
