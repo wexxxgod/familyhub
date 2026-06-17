@@ -171,7 +171,7 @@ export default function MemberPage() {
                       {(m.name || "?")[0]}
                     </div>
                     <span className="truncate flex-1">{m.name}</span>
-                    <span className="text-[10px] text-muted-foreground capitalize">{m.role === "SUPER_ADMIN" ? "Админ" : m.role === "PARENT" ? "Родитель" : m.role === "GUEST" ? "Гость" : "Участник"}</span>
+                    <span className="text-[10px] text-muted-foreground capitalize">Участник</span>
                     {familyInfo?.isCreator && !isSelf && (
                       <button
                         onClick={() => handleRemoveMember(m.id, m.name)}

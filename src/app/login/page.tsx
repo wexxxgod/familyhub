@@ -33,8 +33,7 @@ function LoginForm() {
         body: JSON.stringify({ email, password }),
       });
       if (res.ok) {
-        router.push("/feed");
-        router.refresh();
+        window.location.href = "/feed";
       } else {
         const data = await res.json();
         setError(data.error === "invalid credentials" ? "Неверный email или пароль" : "Ошибка входа. Попробуйте позже.");

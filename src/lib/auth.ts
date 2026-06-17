@@ -20,7 +20,14 @@ export const authOptions: NextAuthOptions = {
         const isValid = await bcrypt.compare(credentials.password, user.passwordHash);
         if (!isValid) return null;
 
-        return { id: user.id, email: user.email, name: user.name, image: user.image, role: user.role };
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          image: user.image,
+          role: user.role,
+          familyId: user.familyId,
+        };
       },
     }),
   ],
@@ -29,6 +36,10 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.role = (user as any).role;
+        token.familyId = (user as any).familyId;
+        token.name = user.name;
+        token.email = user.email;
+        token.picture = user.image;
       }
       return token;
     },
@@ -36,6 +47,7 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         (session.user as any).id = token.id;
         (session.user as any).role = token.role;
+        (session.user as any).familyId = token.familyId;
       }
       return session;
     },
@@ -47,9 +59,12 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60,
+    updateAge: 24 * 60 * 60,
   },
   secret: process.env.NEXTAUTH_SECRET,
 };
+
+let cachedAuthSession: any = null;
 
 export function getAuthSession() {
   return import("next-auth").then(({ getServerSession }) => getServerSession(authOptions));
@@ -58,10 +73,16 @@ export function getAuthSession() {
 export async function getCurrentUser() {
   const session = await getAuthSession();
   if (!session?.user?.email) return null;
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
-  });
-  return user;
+
+  const sUser = session.user as any;
+  return {
+    id: sUser.id,
+    email: sUser.email,
+    name: sUser.name || null,
+    image: sUser.image || null,
+    role: sUser.role || "FAMILY_MEMBER",
+    familyId: sUser.familyId || null,
+  };
 }
 
 export async function requireAuth() {

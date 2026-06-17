@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
+import { useSession } from "next-auth/react";
 
 const NAV_ITEMS = [
   {
@@ -75,13 +76,16 @@ const NAV_ITEMS = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { data: session } = useSession();
+  const sessionUser = session?.user as any;
   const [familyName, setFamilyName] = useState("FamilyHub");
 
   useEffect(() => {
+    if (!sessionUser?.familyId) return;
     api.family.info().then((data) => {
       if (data.family?.name) setFamilyName(data.family.name);
     }).catch(() => {});
-  }, []);
+  }, [sessionUser?.familyId]);
 
   return (
     <aside className="fixed left-0 top-0 bottom-0 w-[240px] border-r border-border bg-sidebar hidden lg:flex flex-col z-40">

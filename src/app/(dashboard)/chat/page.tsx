@@ -19,17 +19,23 @@ export default function ChatPage() {
     try {
       const data = await api.chat.list();
       setMessages(data.reverse());
-      const users = data
-        .flatMap((m: any) => [m.sender, m.receiver])
-        .filter(Boolean)
-        .filter((u: any, i: number, a: any) => a.findIndex((x: any) => x?.id === u?.id) === i)
-        .filter((u: any) => u.id !== currentUserId);
-      setContacts(users);
       setLoading(false);
     } catch { setLoading(false); }
+  }, []);
+
+  const fetchContacts = useCallback(async () => {
+    try {
+      const data = await api.members.list();
+      setContacts(data.filter((m: any) => m.id !== currentUserId));
+    } catch {}
   }, [currentUserId]);
 
-  useEffect(() => { if (currentUserId) fetchMessages(); }, [currentUserId, fetchMessages]);
+  useEffect(() => {
+    if (currentUserId) {
+      fetchMessages();
+      fetchContacts();
+    }
+  }, [currentUserId, fetchMessages, fetchContacts]);
 
   useEffect(() => {
     if (!currentUserId) return;
@@ -43,7 +49,7 @@ export default function ChatPage() {
     if (!input.trim() || !selectedContact) return;
     try {
       const msg = await api.chat.send({ content: input.trim(), receiverId: selectedContact.id });
-      setMessages([...messages, { ...msg, senderId: currentUserId, receiverId: selectedContact.id }]);
+      setMessages([...messages, { ...msg, sender: { id: currentUserId, name: session?.user?.name }, senderId: currentUserId, receiverId: selectedContact.id }]);
       setInput("");
     } catch (e) { console.error(e); }
   };
@@ -51,9 +57,7 @@ export default function ChatPage() {
   const filteredMessages = selectedContact
     ? messages.filter((m) =>
         (m.senderId === selectedContact.id && m.receiverId === currentUserId) ||
-        (m.senderId === currentUserId && m.receiverId === selectedContact.id) ||
-        m.senderId === selectedContact.id ||
-        m.receiverId === selectedContact.id
+        (m.senderId === currentUserId && m.receiverId === selectedContact.id)
       )
     : messages;
 
@@ -88,7 +92,7 @@ export default function ChatPage() {
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                 </svg>
               </div>
-              <p className="text-sm text-muted-foreground">Пока нет собеседников</p>
+              <p className="text-sm text-muted-foreground">В семье пока только вы</p>
             </div>
           ) : (
             contacts.map((c: any) => (
@@ -104,7 +108,7 @@ export default function ChatPage() {
                 </div>
                 <div className="min-w-0">
                   <p className="text-sm font-medium truncate">{c.name || "Пользователь"}</p>
-                  <p className="text-xs text-muted-foreground truncate">{c.role === "PARENT" ? "Родитель" : "Член семьи"}</p>
+                  <p className="text-xs text-muted-foreground truncate">Член семьи</p>
                 </div>
               </button>
             ))

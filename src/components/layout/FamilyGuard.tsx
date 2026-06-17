@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { api } from "@/lib/api";
 
@@ -8,21 +8,35 @@ export function FamilyGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [ready, setReady] = useState(false);
+  const checkedRef = useRef(false);
 
   useEffect(() => {
+    if (checkedRef.current) return;
     if (pathname === "/family-setup") {
       setReady(true);
       return;
     }
-    api.family.info().then((data) => {
-      if (!data.family) {
-        router.replace("/family-setup");
-      } else {
-        setReady(true);
+
+    let cancelled = false;
+
+    async function check() {
+      try {
+        const data = await api.family.info();
+        if (cancelled) return;
+        checkedRef.current = true;
+        if (!data.family) {
+          router.replace("/family-setup");
+        } else {
+          setReady(true);
+        }
+      } catch {
+        if (cancelled) return;
+        setTimeout(check, 500);
       }
-    }).catch(() => {
-      setReady(true);
-    });
+    }
+
+    check();
+    return () => { cancelled = true; };
   }, [pathname, router]);
 
   if (!ready) {

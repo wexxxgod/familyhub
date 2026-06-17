@@ -42,21 +42,6 @@ export default function AdminPage() {
     setRemoving(null);
   };
 
-  const handleChangeRole = async (userId: string, role: string) => {
-    try {
-      await api.admin.action("change_role", { userId, role });
-      setFamilyInfo({
-        ...familyInfo,
-        members: familyInfo.members.map((m: any) =>
-          m.id === userId ? { ...m, role } : m
-        ),
-      });
-      toast.success("Роль изменена");
-    } catch {
-      toast.error("Ошибка изменения роли");
-    }
-  };
-
   const STAT_CARDS = stats
     ? [
         { label: "Члены семьи", value: String(stats.users || 0), color: "from-purple-500/20 to-pink-500/20" },
@@ -123,37 +108,23 @@ export default function AdminPage() {
                     <p className="text-xs text-muted-foreground truncate">{m.email}</p>
                   </div>
                   <div className="flex items-center gap-2">
+                    <span className="text-xs px-3 py-1.5 rounded-lg bg-accent">
+                      {familyInfo?.isCreator && m.id === currentUser.id ? "Создатель" : "Участник"}
+                    </span>
                     {familyInfo?.isCreator && !isSelf && (
-                      <>
-                        <select
-                          value={m.role}
-                          onChange={(e) => handleChangeRole(m.id, e.target.value)}
-                          className="px-3 py-1.5 rounded-lg bg-accent outline-none text-xs"
-                        >
-                          <option value="SUPER_ADMIN">Админ</option>
-                          <option value="PARENT">Родитель</option>
-                          <option value="FAMILY_MEMBER">Участник</option>
-                          <option value="GUEST">Гость</option>
-                        </select>
-                        <button
-                          onClick={() => handleRemoveUser(m.id, m.name)}
-                          disabled={removing === m.id}
-                          className="p-2 rounded-lg text-red-500 hover:bg-red-500/10 transition-all disabled:opacity-50"
-                        >
-                          {removing === m.id ? (
-                            <div className="w-4 h-4 rounded-full border-2 border-red-500 border-t-transparent animate-spin" />
-                          ) : (
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                            </svg>
-                          )}
-                        </button>
-                      </>
-                    )}
-                    {!familyInfo?.isCreator && (
-                      <span className="text-xs px-3 py-1.5 rounded-lg bg-accent">
-                        {m.role === "SUPER_ADMIN" ? "Админ" : m.role === "PARENT" ? "Родитель" : m.role === "GUEST" ? "Гость" : "Участник"}
-                      </span>
+                      <button
+                        onClick={() => handleRemoveUser(m.id, m.name)}
+                        disabled={removing === m.id}
+                        className="p-2 rounded-lg text-red-500 hover:bg-red-500/10 transition-all disabled:opacity-50"
+                      >
+                        {removing === m.id ? (
+                          <div className="w-4 h-4 rounded-full border-2 border-red-500 border-t-transparent animate-spin" />
+                        ) : (
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                          </svg>
+                        )}
+                      </button>
                     )}
                   </div>
                 </div>
