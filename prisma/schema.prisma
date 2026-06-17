@@ -1,0 +1,349 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  PARENT
+  FAMILY_MEMBER
+  GUEST
+}
+
+enum PostVisibility {
+  EVERYONE
+  FAMILY_ONLY
+  PARENTS_ONLY
+}
+
+enum ArchiveCategory {
+  PHOTO
+  VIDEO
+  DOCUMENT
+  CERTIFICATE
+  HEIRLOOM
+}
+
+enum EventType {
+  BIRTHDAY
+  ANNIVERSARY
+  HOLIDAY
+  FAMILY_MEETING
+  CUSTOM
+}
+
+enum PollStatus {
+  ACTIVE
+  CLOSED
+}
+
+enum TimeCapsuleStatus {
+  SEALED
+  OPENED
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  name          String?
+  passwordHash  String?
+  image         String?
+  role          Role     @default(FAMILY_MEMBER)
+  bio           String?
+  phone         String?
+  dateOfBirth   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  posts         Post[]
+  comments      Comment[]
+  likes         Like[]
+  messagesSent      Message[]  @relation("SentMessages")
+  messagesReceived  Message[]  @relation("ChatMessages")
+  chatMemberships   ChatRoomMember[]
+  notifications Notification[]
+  achievements  Achievement[]
+  pollVotes     PollVote[]
+  events        Event[]
+  archiveItems  ArchiveItem[]
+  memories      Memory[]
+  timeCapsules  TimeCapsule[]
+  budgetEntries BudgetEntry[]
+  polls         Poll[]
+  activityLogs  ActivityLog[]
+
+  @@map("users")
+}
+
+model Post {
+  id         String          @id @default(cuid())
+  content    String
+  image      String?
+  video      String?
+  document   String?
+  tags       String[]
+  visibility PostVisibility @default(FAMILY_ONLY)
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+
+  authorId String
+  author   User    @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  comments Comment[]
+  likes    Like[]
+
+  @@map("posts")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  postId   String
+  post     Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@map("comments")
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  postId String
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@map("likes")
+}
+
+model ArchiveItem {
+  id          String           @id @default(cuid())
+  title       String
+  description String?
+  url         String
+  category    ArchiveCategory
+  year        Int?
+  tags        String[]
+  createdAt   DateTime         @default(now())
+
+  uploadedById String
+  uploadedBy   User             @relation(fields: [uploadedById], references: [id])
+
+  @@map("archive_items")
+}
+
+model FamilyMember {
+  id          String   @id @default(cuid())
+  firstName   String
+  lastName    String
+  middleName  String?
+  dateOfBirth DateTime?
+  dateOfDeath DateTime?
+  photo       String?
+  bio         String?
+  birthplace  String?
+  location    String?
+  latitude    Float?
+  longitude   Float?
+  createdAt   DateTime @default(now())
+
+  parentId    String?
+  parent      FamilyMember?  @relation("FamilyRelation", fields: [parentId], references: [id])
+  children    FamilyMember[] @relation("FamilyRelation")
+
+  @@map("family_members")
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  content   String
+  image     String?
+  file      String?
+  createdAt DateTime @default(now())
+
+  senderId   String
+  sender     User   @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId String?
+  receiver   User?  @relation("ChatMessages", fields: [receiverId], references: [id])
+  chatRoomId String?
+  chatRoom   ChatRoom? @relation(fields: [chatRoomId], references: [id])
+
+  @@map("messages")
+}
+
+model ChatRoom {
+  id        String   @id @default(cuid())
+  name      String?
+  createdAt DateTime @default(now())
+
+  members  ChatRoomMember[]
+  messages Message[]
+
+  @@map("chat_rooms")
+}
+
+model ChatRoomMember {
+  id       String   @id @default(cuid())
+  joinedAt DateTime @default(now())
+
+  userId String
+  user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roomId String
+  room   ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roomId])
+  @@map("chat_room_members")
+}
+
+model Event {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  date        DateTime
+  type        EventType @default(CUSTOM)
+  remindAt    DateTime?
+  createdAt   DateTime  @default(now())
+
+  createdById String
+  createdBy   User   @relation(fields: [createdById], references: [id])
+
+  @@map("events")
+}
+
+model Memory {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  image     String?
+  audioUrl  String?
+  year      Int?
+  createdAt DateTime @default(now())
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id])
+
+  @@map("memories")
+}
+
+model TimeCapsule {
+  id        String             @id @default(cuid())
+  title     String
+  message   String
+  image     String?
+  openDate  DateTime
+  status    TimeCapsuleStatus  @default(SEALED)
+  createdAt DateTime           @default(now())
+  openedAt  DateTime?
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id])
+
+  @@map("time_capsules")
+}
+
+model BudgetEntry {
+  id          String   @id @default(cuid())
+  title       String
+  amount      Float
+  type        String   @default("expense")
+  category    String
+  description String?
+  date        DateTime @default(now())
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id])
+
+  @@map("budget_entries")
+}
+
+model BudgetGoal {
+  id            String   @id @default(cuid())
+  title         String
+  targetAmount  Float
+  currentAmount Float   @default(0)
+  deadline      DateTime?
+  createdAt     DateTime @default(now())
+
+  @@map("budget_goals")
+}
+
+model Poll {
+  id        String     @id @default(cuid())
+  question  String
+  options   String[]
+  status    PollStatus @default(ACTIVE)
+  createdAt DateTime   @default(now())
+  endsAt    DateTime?
+
+  authorId String
+  author   User     @relation(fields: [authorId], references: [id])
+  votes    PollVote[]
+
+  @@map("polls")
+}
+
+model PollVote {
+  id        String   @id @default(cuid())
+  option    String
+  createdAt DateTime @default(now())
+
+  pollId String
+  poll   Poll   @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([pollId, userId])
+  @@map("poll_votes")
+}
+
+model Achievement {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  image       String?
+  date        DateTime?
+  category    String   @default("general")
+  createdAt   DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@map("achievements")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  type      String
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  action    String
+  details   String?
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@map("activity_logs")
+}

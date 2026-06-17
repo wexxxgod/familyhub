@@ -1,0 +1,46 @@
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
+
+export async function GET() {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const messages = await prisma.message.findMany({
+      where: {
+        OR: [{ senderId: user.id }, { receiverId: user.id }],
+      },
+      include: { sender: true, receiver: true },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+    });
+
+    return NextResponse.json(messages);
+  } catch {
+    return NextResponse.json({ error: "Failed to fetch messages" }, { status: 500 });
+  }
+}
+
+export async function POST(req: Request) {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const { content, receiverId, chatRoomId } = await req.json();
+
+    const message = await prisma.message.create({
+      data: {
+        content,
+        senderId: user.id,
+        receiverId,
+        chatRoomId,
+      },
+      include: { sender: true },
+    });
+
+    return NextResponse.json(message);
+  } catch {
+    return NextResponse.json({ error: "Failed to send message" }, { status: 500 });
+  }
+}
