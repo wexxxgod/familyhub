@@ -14,6 +14,23 @@ export async function POST(req: Request) {
       include: { author: true },
     });
 
+    const post = await prisma.post.findUnique({
+      where: { id: postId },
+      select: { authorId: true },
+    });
+
+    if (post && post.authorId !== user.id) {
+      await prisma.notification.create({
+        data: {
+          type: "COMMENT",
+          title: "Новый комментарий",
+          message: `${user.name || "Кто-то"} прокомментировал ваш пост: ${content.slice(0, 50)}${content.length > 50 ? "..." : ""}`,
+          link: "/feed",
+          userId: post.authorId,
+        },
+      });
+    }
+
     return NextResponse.json(comment);
   } catch {
     return NextResponse.json({ error: "Failed to create comment" }, { status: 500 });

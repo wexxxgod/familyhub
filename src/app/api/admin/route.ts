@@ -4,17 +4,19 @@ import { requireRole } from "@/lib/auth";
 
 export async function GET() {
   try {
-    await requireRole("SUPER_ADMIN", "PARENT");
+    const user = await requireRole("SUPER_ADMIN", "PARENT");
+    if (!user.familyId) return NextResponse.json({ error: "Нет семьи" }, { status: 400 });
+
+    const familyFilter = { familyId: user.familyId };
 
     const stats = {
-      users: await prisma.user.count(),
-      posts: await prisma.post.count(),
-      comments: await prisma.comment.count(),
-      likes: await prisma.like.count(),
-      archiveItems: await prisma.archiveItem.count(),
-      messages: await prisma.message.count(),
-      events: await prisma.event.count(),
-      memories: await prisma.memory.count(),
+      users: await prisma.user.count({ where: familyFilter }),
+      posts: await prisma.post.count({ where: { author: familyFilter } }),
+      comments: await prisma.comment.count({ where: { author: familyFilter } }),
+      likes: await prisma.like.count({ where: { user: familyFilter } }),
+      archiveItems: await prisma.archiveItem.count({ where: { uploadedBy: familyFilter } }),
+      events: await prisma.event.count({ where: { createdBy: familyFilter } }),
+      memories: await prisma.memory.count({ where: { author: familyFilter } }),
     };
 
     return NextResponse.json(stats);

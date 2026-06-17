@@ -3,20 +3,59 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { api } from "@/lib/api";
+import { useSession } from "next-auth/react";
+import toast from "react-hot-toast";
 
-const TABS = ["Обзор", "Пользователи", "Настройки", "Бэкап"];
+const TABS = ["Обзор", "Пользователи", "Настройки"];
 
 export default function AdminPage() {
+  const { data: session } = useSession();
   const [tab, setTab] = useState("Обзор");
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [familyInfo, setFamilyInfo] = useState<any>(null);
+  const [removing, setRemoving] = useState<string | null>(null);
 
   useEffect(() => {
     api.admin.stats().then((data) => {
       setStats(data);
       setLoading(false);
     }).catch(() => setLoading(false));
+    api.family.info().then((data) => {
+      if (data.family) setFamilyInfo(data);
+    }).catch(() => {});
   }, []);
+
+  const handleRemoveUser = async (userId: string, userName: string) => {
+    if (!confirm(`Удалить ${userName} из семьи?`)) return;
+    setRemoving(userId);
+    try {
+      await api.family.removeMember(userId);
+      setFamilyInfo({
+        ...familyInfo,
+        members: familyInfo.members.filter((m: any) => m.id !== userId),
+      });
+      toast.success(`${userName} удалён из семьи`);
+    } catch {
+      toast.error("Ошибка при удалении");
+    }
+    setRemoving(null);
+  };
+
+  const handleChangeRole = async (userId: string, role: string) => {
+    try {
+      await api.admin.action("change_role", { userId, role });
+      setFamilyInfo({
+        ...familyInfo,
+        members: familyInfo.members.map((m: any) =>
+          m.id === userId ? { ...m, role } : m
+        ),
+      });
+      toast.success("Роль изменена");
+    } catch {
+      toast.error("Ошибка изменения роли");
+    }
+  };
 
   const STAT_CARDS = stats
     ? [
@@ -26,6 +65,9 @@ export default function AdminPage() {
         { label: "Сообщения", value: String(stats.messages || 0), color: "from-amber-500/20 to-orange-500/20" },
       ]
     : [];
+
+  const currentUser = (session?.user as any) || {};
+  const members = familyInfo?.members || [];
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
@@ -63,8 +105,61 @@ export default function AdminPage() {
       )}
 
       {tab === "Пользователи" && (
-        <div className="glass-card p-6 text-center">
-          <p className="text-sm text-muted-foreground">Управление пользователями появится в следующем обновлении</p>
+        <div className="glass-card overflow-hidden">
+          <div className="p-5 border-b border-border">
+            <h3 className="font-semibold">Участники семьи</h3>
+            <p className="text-xs text-muted-foreground mt-1">Управление ролями и доступом</p>
+          </div>
+          <div className="divide-y divide-border">
+            {members.map((m: any) => {
+              const isSelf = m.id === currentUser.id;
+              return (
+                <div key={m.id} className="p-4 flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-bold shrink-0">
+                    {(m.name || "?")[0]}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate">{m.name} {isSelf && <span className="text-xs text-muted-foreground">(вы)</span>}</p>
+                    <p className="text-xs text-muted-foreground truncate">{m.email}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {familyInfo?.isCreator && !isSelf && (
+                      <>
+                        <select
+                          value={m.role}
+                          onChange={(e) => handleChangeRole(m.id, e.target.value)}
+                          className="px-3 py-1.5 rounded-lg bg-accent outline-none text-xs"
+                        >
+                          <option value="SUPER_ADMIN">Админ</option>
+                          <option value="PARENT">Родитель</option>
+                          <option value="FAMILY_MEMBER">Участник</option>
+                          <option value="GUEST">Гость</option>
+                        </select>
+                        <button
+                          onClick={() => handleRemoveUser(m.id, m.name)}
+                          disabled={removing === m.id}
+                          className="p-2 rounded-lg text-red-500 hover:bg-red-500/10 transition-all disabled:opacity-50"
+                        >
+                          {removing === m.id ? (
+                            <div className="w-4 h-4 rounded-full border-2 border-red-500 border-t-transparent animate-spin" />
+                          ) : (
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                            </svg>
+                          )}
+                        </button>
+                      </>
+                    )}
+                    {!familyInfo?.isCreator && (
+                      <span className="text-xs px-3 py-1.5 rounded-lg bg-accent">
+                        {m.role === "SUPER_ADMIN" ? "Админ" : m.role === "PARENT" ? "Родитель" : m.role === "GUEST" ? "Гость" : "Участник"}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
@@ -77,28 +172,10 @@ export default function AdminPage() {
                 <p className="font-medium text-sm">Название семьи</p>
                 <p className="text-xs text-muted-foreground">Как будет называться ваше семейное пространство</p>
               </div>
-              <input type="text" placeholder="Семья" className="px-4 py-2 rounded-xl bg-accent outline-none text-sm w-48" />
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-sm">Видимость ленты</p>
-                <p className="text-xs text-muted-foreground">Кто может видеть посты</p>
-              </div>
-              <select className="px-4 py-2 rounded-xl bg-accent outline-none text-sm">
-                <option>Только семья</option>
-                <option>Только родители</option>
-              </select>
+              <input type="text" placeholder={familyInfo?.family?.name || "Семья"} className="px-4 py-2 rounded-xl bg-accent outline-none text-sm w-48" />
             </div>
             <button className="px-6 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-all">Сохранить</button>
           </div>
-        </div>
-      )}
-
-      {tab === "Бэкап" && (
-        <div className="glass-card p-6">
-          <h3 className="font-semibold mb-4">Резервное копирование</h3>
-          <p className="text-sm text-muted-foreground mb-6">Создайте резервную копию всех данных семьи</p>
-          <button className="px-6 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-all">Создать бэкап</button>
         </div>
       )}
     </div>

@@ -6,8 +6,10 @@ export async function GET() {
   try {
     const user = await getCurrentUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!user.familyId) return NextResponse.json([]);
 
     const members = await prisma.familyMember.findMany({
+      where: { familyId: user.familyId },
       orderBy: { createdAt: "desc" },
     });
 
@@ -21,6 +23,7 @@ export async function POST(req: Request) {
   try {
     const user = await getCurrentUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!user.familyId) return NextResponse.json({ error: "Вы не в семье" }, { status: 400 });
 
     const data = await req.json();
     const member = await prisma.familyMember.create({
@@ -30,6 +33,7 @@ export async function POST(req: Request) {
         middleName: data.middleName,
         dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : null,
         parentId: data.parentId || null,
+        familyId: user.familyId,
       },
     });
 

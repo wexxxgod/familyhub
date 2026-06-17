@@ -14,7 +14,24 @@ export default function MemberPage() {
   const [form, setForm] = useState({ name: "", bio: "", phone: "" });
   const [stats, setStats] = useState({ posts: 0, comments: 0, likes: 0 });
   const [uploading, setUploading] = useState(false);
+  const [removing, setRemoving] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleRemoveMember = async (userId: string, userName: string) => {
+    if (!confirm(`Удалить ${userName} из семьи?`)) return;
+    setRemoving(userId);
+    try {
+      await api.family.removeMember(userId);
+      setFamilyInfo({
+        ...familyInfo,
+        members: familyInfo.members.filter((m: any) => m.id !== userId),
+      });
+      toast.success(`${userName} удалён из семьи`);
+    } catch {
+      toast.error("Ошибка при удалении");
+    }
+    setRemoving(null);
+  };
 
   useEffect(() => {
     api.profile.get().then((data) => {
@@ -146,14 +163,31 @@ export default function MemberPage() {
           <div className="mt-4 pt-4 border-t border-border/50">
             <p className="text-xs text-muted-foreground mb-2">Участники семьи</p>
             <div className="space-y-2">
-              {(familyInfo?.members || []).map((m: any) => (
-                <div key={m.id} className="flex items-center gap-2 text-sm">
-                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-[10px] font-bold shrink-0">
-                    {(m.name || "?")[0]}
+              {(familyInfo?.members || []).map((m: any) => {
+                const isSelf = m.id === (session?.user as any)?.id;
+                return (
+                  <div key={m.id} className="flex items-center gap-2 text-sm group">
+                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-[10px] font-bold shrink-0">
+                      {(m.name || "?")[0]}
+                    </div>
+                    <span className="truncate flex-1">{m.name}</span>
+                    <span className="text-[10px] text-muted-foreground capitalize">{m.role === "SUPER_ADMIN" ? "Админ" : m.role === "PARENT" ? "Родитель" : m.role === "GUEST" ? "Гость" : "Участник"}</span>
+                    {familyInfo?.isCreator && !isSelf && (
+                      <button
+                        onClick={() => handleRemoveMember(m.id, m.name)}
+                        disabled={removing === m.id}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 text-red-500 hover:bg-red-500/10 rounded"
+                      >
+                        {removing === m.id ? (
+                          <div className="w-3 h-3 rounded-full border-2 border-red-500 border-t-transparent animate-spin" />
+                        ) : (
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
+                        )}
+                      </button>
+                    )}
                   </div>
-                  <span className="truncate">{m.name}</span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>

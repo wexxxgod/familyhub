@@ -28,7 +28,8 @@ export default function FeedPage() {
         document: p.document,
         createdAt: p.createdAt,
         author: p.author || { name: "Пользователь", role: "FAMILY_MEMBER" },
-        comments: p.comments?.length || 0,
+        comments: p.comments || [],
+        commentsCount: p.comments?.length || 0,
         likes: p.likes?.length || 0,
         isLiked: p.likes?.some((l: any) => l.userId === currentUserId) || false,
         authorId: p.authorId,
@@ -48,7 +49,8 @@ export default function FeedPage() {
       setPosts([{
         ...newPost,
         author: newPost.author || { name: "Вы", role: "FAMILY_MEMBER" },
-        comments: 0,
+        comments: [],
+        commentsCount: 0,
         likes: 0,
         isLiked: false,
         authorId: newPost.authorId,
@@ -84,13 +86,39 @@ export default function FeedPage() {
 
   const handleComment = async (postId: string, content: string) => {
     try {
-      await api.comments.create(postId, content);
+      const newComment = await api.comments.create(postId, content);
       setPosts(posts.map((p) =>
-        p.id === postId ? { ...p, comments: p.comments + 1 } : p
+        p.id === postId
+          ? {
+              ...p,
+              comments: [...(p.comments || []), {
+                ...newComment,
+                author: { name: session?.user?.name || "Вы" },
+              }],
+              commentsCount: (p.commentsCount || 0) + 1,
+            }
+          : p
       ));
       toast.success("Комментарий добавлен");
     } catch (e) {
       toast.error("Ошибка при добавлении комментария");
+    }
+  };
+
+  const handleDeleteComment = async (postId: string, commentId: string) => {
+    try {
+      await api.comments.delete(commentId);
+      setPosts(posts.map((p) =>
+        p.id === postId
+          ? {
+              ...p,
+              comments: p.comments?.filter((c: any) => c.id !== commentId) || [],
+              commentsCount: Math.max(0, (p.commentsCount || 0) - 1),
+            }
+          : p
+      ));
+    } catch {
+      toast.error("Ошибка при удалении комментария");
     }
   };
 
@@ -147,6 +175,7 @@ export default function FeedPage() {
                 onToggleLike={() => handleToggleLike(post.id)}
                 onComment={(content) => handleComment(post.id, content)}
                 onDelete={handleDeletePost}
+                onDeleteComment={(commentId) => handleDeleteComment(post.id, commentId)}
               />
             </motion.div>
           ))}

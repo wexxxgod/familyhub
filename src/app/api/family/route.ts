@@ -76,6 +76,41 @@ export async function POST(req: Request) {
   }
 }
 
+export async function DELETE(req: Request) {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    if (!user.familyId) {
+      return NextResponse.json({ error: "Вы не в семье" }, { status: 400 });
+    }
+
+    const family = await prisma.family.findUnique({ where: { id: user.familyId } });
+    if (!family || family.createdBy !== user.id) {
+      return NextResponse.json({ error: "Только создатель может удалять участников" }, { status: 403 });
+    }
+
+    const { userId } = await req.json();
+    if (userId === user.id) {
+      return NextResponse.json({ error: "Нельзя удалить себя" }, { status: 400 });
+    }
+
+    const targetUser = await prisma.user.findUnique({ where: { id: userId } });
+    if (!targetUser || targetUser.familyId !== user.familyId) {
+      return NextResponse.json({ error: "Пользователь не найден в семье" }, { status: 404 });
+    }
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { familyId: null },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch {
+    return NextResponse.json({ error: "Ошибка удаления" }, { status: 500 });
+  }
+}
+
 export async function PATCH() {
   try {
     const user = await getCurrentUser();

@@ -16,10 +16,28 @@ export async function POST(req: Request) {
     if (existing) {
       await prisma.like.delete({ where: { id: existing.id } });
       return NextResponse.json({ liked: false });
-    } else {
-      await prisma.like.create({ data: { postId, userId: user.id } });
-      return NextResponse.json({ liked: true });
     }
+
+    const post = await prisma.post.findUnique({
+      where: { id: postId },
+      select: { authorId: true },
+    });
+
+    await prisma.like.create({ data: { postId, userId: user.id } });
+
+    if (post && post.authorId !== user.id) {
+      await prisma.notification.create({
+        data: {
+          type: "LIKE",
+          title: "Новый лайк",
+          message: `${user.name || "Кто-то"} оценил ваш пост`,
+          link: "/feed",
+          userId: post.authorId,
+        },
+      });
+    }
+
+    return NextResponse.json({ liked: true });
   } catch {
     return NextResponse.json({ error: "Failed to toggle like" }, { status: 500 });
   }

@@ -62,6 +62,7 @@ export const api = {
     create: (data: { name: string }) => request<{ family: any; inviteCode: string }>("/api/family", { method: "POST", body: JSON.stringify(data) }),
     join: (data: { inviteCode: string }) => request<{ family: any }>("/api/family/join", { method: "POST", body: JSON.stringify(data) }),
     regenerateCode: () => request<{ inviteCode: string }>("/api/family", { method: "PATCH" }),
+    removeMember: (userId: string) => request<any>("/api/family", { method: "DELETE", body: JSON.stringify({ userId }) }),
   },
   familyTree: {
     list: () => request<any[]>("/api/family-tree"),

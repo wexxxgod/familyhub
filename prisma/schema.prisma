@@ -47,8 +47,9 @@ model Family {
   inviteCode String   @unique
   createdAt  DateTime @default(now())
 
-  createdBy String
-  members   User[]
+  createdBy     String
+  members       User[]
+  familyMembers FamilyMember[]
 
   @@map("families")
 }
@@ -162,6 +163,9 @@ model FamilyMember {
   latitude    Float?
   longitude   Float?
   createdAt   DateTime @default(now())
+
+  familyId String?
+  family   Family? @relation(fields: [familyId], references: [id])
 
   parentId    String?
   parent      FamilyMember?  @relation("FamilyRelation", fields: [parentId], references: [id])

@@ -6,7 +6,11 @@ export async function GET() {
   try {
     const user = await getCurrentUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    if (!user.familyId) return NextResponse.json([]);
+
     const events = await prisma.event.findMany({
+      where: { createdBy: { familyId: user.familyId } },
       orderBy: { date: "asc" },
     });
     return NextResponse.json(events);

@@ -4,7 +4,17 @@ import { getCurrentUser } from "@/lib/auth";
 
 export async function GET() {
   try {
+    const user = await getCurrentUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    if (!user.familyId) {
+      return NextResponse.json([]);
+    }
+
     const posts = await prisma.post.findMany({
+      where: {
+        author: { familyId: user.familyId },
+      },
       include: {
         author: true,
         comments: { include: { author: true } },

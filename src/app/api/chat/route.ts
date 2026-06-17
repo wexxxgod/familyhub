@@ -29,6 +29,16 @@ export async function POST(req: Request) {
 
     const { content, receiverId, chatRoomId } = await req.json();
 
+    if (receiverId) {
+      const receiver = await prisma.user.findUnique({
+        where: { id: receiverId },
+        select: { familyId: true },
+      });
+      if (!receiver || receiver.familyId !== user.familyId) {
+        return NextResponse.json({ error: "Нельзя отправить сообщение пользователю из другой семьи" }, { status: 403 });
+      }
+    }
+
     const message = await prisma.message.create({
       data: {
         content,
