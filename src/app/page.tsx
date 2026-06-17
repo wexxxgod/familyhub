@@ -101,7 +101,7 @@ export default function HomePage() {
               Войти
             </Link>
             <Link
-              href="/register"
+              href="/login"
               className="px-5 py-2 text-sm font-semibold rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
             >
               Присоединиться
@@ -135,7 +135,7 @@ export default function HomePage() {
               </p>
               <div className="flex flex-wrap gap-4">
                 <Link
-                  href="/register"
+                  href="/login"
                   className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-all hover-lift"
                 >
                   Создать семью
@@ -240,7 +240,7 @@ export default function HomePage() {
             Создайте FamilyHub для вашей семьи бесплатно. Пригласите близких и начните делиться важными моментами.
           </p>
           <Link
-            href="/register"
+            href="/login"
             className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-primary text-primary-foreground font-semibold text-lg hover:opacity-90 transition-all hover-lift relative z-10"
           >
             Создать семейный аккаунт
