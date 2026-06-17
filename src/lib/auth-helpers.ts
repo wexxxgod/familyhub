@@ -4,12 +4,7 @@ import { createHash } from "crypto";
 import { headers, cookies } from "next/headers";
 import { NextResponse, NextRequest } from "next/server";
 
-const COOKIE_NAME_SECURE = "__Secure-next-auth.session-token";
-const COOKIE_NAME_INSECURE = "next-auth.session-token";
-
-function getCookieName(): string {
-  return process.env.NODE_ENV === "production" ? COOKIE_NAME_SECURE : COOKIE_NAME_INSECURE;
-}
+const COOKIE_NAME = "familyhub.session";
 
 function getSecretKey(): Uint8Array | null {
   const secret = process.env.NEXTAUTH_SECRET;
@@ -18,7 +13,6 @@ function getSecretKey(): Uint8Array | null {
 }
 
 const COOKIE_MAX_AGE = 30 * 24 * 60 * 60;
-const COOKIE_NAME = getCookieName();
 
 export async function createSessionToken(user: {
   id: string; role: string; email: string; name: string | null; image: string | null; familyId: string | null;
@@ -43,12 +37,11 @@ export async function createSessionToken(user: {
 }
 
 export function setSessionCookie(response: NextResponse, token: string): void {
-  const isSecure = process.env.NODE_ENV === "production";
   response.cookies.set(COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: "lax",
     path: "/",
-    secure: isSecure,
+    secure: process.env.NODE_ENV === "production",
     maxAge: COOKIE_MAX_AGE,
   });
 }
