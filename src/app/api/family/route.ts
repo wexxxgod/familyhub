@@ -68,8 +68,11 @@ export async function POST(req: Request) {
       family: { id: family.id, name: family.name, inviteCode: family.inviteCode },
       inviteCode: family.inviteCode,
     });
-  } catch {
-    return NextResponse.json({ error: "Failed to create family" }, { status: 500 });
+  } catch (e: any) {
+    if (e?.code === "P2002") {
+      return NextResponse.json({ error: "Семья с таким названием уже существует" }, { status: 409 });
+    }
+    return NextResponse.json({ error: "Ошибка создания семьи" }, { status: 500 });
   }
 }
 
