@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, createSessionToken, setSessionCookie } from "@/lib/auth";
+import { getCurrentUser, createSessionToken, setSessionCookie } from "@/lib/auth-helpers";
 
 export async function POST(req: Request) {
   try {
