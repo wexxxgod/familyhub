@@ -1,10 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth-helpers";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const user = await requireRole("SUPER_ADMIN", "PARENT");
+    const user = await requireRole(["SUPER_ADMIN", "PARENT"], req);
     if (!user.familyId) return NextResponse.json({ error: "Нет семьи" }, { status: 400 });
 
     const familyFilter = { familyId: user.familyId };
@@ -25,9 +25,9 @@ export async function GET() {
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const user = await requireRole("SUPER_ADMIN");
+    const user = await requireRole(["SUPER_ADMIN"], req);
     const { action, data } = await req.json();
 
     if (action === "delete_user") {

@@ -1,8 +1,8 @@
 import { prisma } from "./prisma";
 import { jwtDecrypt, EncryptJWT } from "jose";
 import { createHash } from "crypto";
-import { cookies } from "next/headers";
-import { NextResponse } from "next/server";
+import { headers } from "next/headers";
+import { NextResponse, NextRequest } from "next/server";
 
 const COOKIE_NAME_SECURE = "__Secure-next-auth.session-token";
 const COOKIE_NAME_INSECURE = "next-auth.session-token";
@@ -18,6 +18,7 @@ function getSecretKey(): Uint8Array | null {
 }
 
 const COOKIE_MAX_AGE = 30 * 24 * 60 * 60;
+const COOKIE_NAME = getCookieName();
 
 export async function createSessionToken(user: {
   id: string; role: string; email: string; name: string | null; image: string | null; familyId: string | null;
@@ -43,7 +44,7 @@ export async function createSessionToken(user: {
 
 export function setSessionCookie(response: NextResponse, token: string): void {
   const isSecure = process.env.NODE_ENV === "production";
-  response.cookies.set(getCookieName(), token, {
+  response.cookies.set(COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: "lax",
     path: "/",
@@ -52,48 +53,66 @@ export function setSessionCookie(response: NextResponse, token: string): void {
   });
 }
 
-async function decodeSessionCookie(): Promise<any | null> {
+function getTokenFromHeaders(): string | null {
   try {
-    const token = cookies().get(getCookieName())?.value;
-    if (!token) return null;
-    const key = getSecretKey();
-    if (!key) return null;
-    const { payload } = await jwtDecrypt(token, key);
-    return payload;
+    const cookieHeader = headers().get("cookie") || "";
+    for (const c of cookieHeader.split(";")) {
+      const idx = c.indexOf("=");
+      if (idx === -1) continue;
+      const name = c.slice(0, idx).trim();
+      const value = c.slice(idx + 1).trim();
+      if (name === COOKIE_NAME) return decodeURIComponent(value);
+    }
+    return null;
   } catch {
     return null;
   }
 }
 
-export async function getCurrentUser() {
-  const payload = await decodeSessionCookie();
-  if (!payload?.id) return null;
+export async function getCurrentUser(req?: NextRequest) {
+  let token: string | null = null;
 
-  const dbUser = await prisma.user.findUnique({
-    where: { id: payload.id as string },
-    select: { id: true, email: true, name: true, image: true, role: true, familyId: true },
-  });
+  if (req) {
+    token = req.cookies.get(COOKIE_NAME)?.value || null;
+  }
+  if (!token) {
+    token = getTokenFromHeaders();
+  }
+  if (!token) return null;
 
-  if (!dbUser) return null;
+  try {
+    const key = getSecretKey();
+    if (!key) return null;
+    const { payload } = await jwtDecrypt(token, key);
+    if (!payload?.id) return null;
 
-  return {
-    id: dbUser.id,
-    email: dbUser.email,
-    name: dbUser.name,
-    image: dbUser.image,
-    role: dbUser.role,
-    familyId: dbUser.familyId,
-  };
+    const dbUser = await prisma.user.findUnique({
+      where: { id: payload.id as string },
+      select: { id: true, email: true, name: true, image: true, role: true, familyId: true },
+    });
+    if (!dbUser) return null;
+
+    return {
+      id: dbUser.id,
+      email: dbUser.email,
+      name: dbUser.name,
+      image: dbUser.image,
+      role: dbUser.role,
+      familyId: dbUser.familyId,
+    };
+  } catch {
+    return null;
+  }
 }
 
-export async function requireAuth() {
-  const user = await getCurrentUser();
+export async function requireAuth(req?: NextRequest) {
+  const user = await getCurrentUser(req);
   if (!user) throw new Error("Unauthorized");
   return user;
 }
 
-export async function requireRole(...roles: string[]) {
-  const user = await requireAuth();
+export async function requireRole(roles: string[], req?: NextRequest) {
+  const user = await requireAuth(req);
   if (!roles.includes(user.role)) throw new Error("Forbidden");
   return user;
 }
