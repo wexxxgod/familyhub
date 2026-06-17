@@ -27,14 +27,19 @@ export async function GET() {
   try {
     const user = await getCurrentUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    const profile = await prisma.user.findUnique({
-      where: { id: user.id },
-      select: {
-        id: true, name: true, email: true, image: true,
-        role: true, bio: true, phone: true, dateOfBirth: true, createdAt: true,
-      },
-    });
-    return NextResponse.json(profile);
+    const [profile, posts, comments, likesAgg] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: user.id },
+        select: {
+          id: true, name: true, email: true, image: true,
+          role: true, bio: true, phone: true, dateOfBirth: true, createdAt: true,
+        },
+      }),
+      prisma.post.count({ where: { authorId: user.id } }),
+      prisma.comment.count({ where: { authorId: user.id } }),
+      prisma.like.count({ where: { userId: user.id } }),
+    ]);
+    return NextResponse.json({ ...profile, stats: { posts, comments, likes: likesAgg } });
   } catch {
     return NextResponse.json({ error: "Failed to fetch profile" }, { status: 500 });
   }

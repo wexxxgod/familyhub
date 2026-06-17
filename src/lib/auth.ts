@@ -45,6 +45,11 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         (session.user as any).id = token.id;
         (session.user as any).role = token.role;
+        const fresh = await prisma.user.findUnique({ where: { id: token.id as string }, select: { image: true, name: true } });
+        if (fresh) {
+          session.user.image = fresh.image;
+          session.user.name = fresh.name;
+        }
       }
       return session;
     },
@@ -58,17 +63,6 @@ export const authOptions: NextAuthOptions = {
     maxAge: 30 * 24 * 60 * 60,
   },
   secret: process.env.NEXTAUTH_SECRET,
-  cookies: {
-    sessionToken: {
-      name: process.env.NODE_ENV === "production" ? "__Secure-next-auth.session-token" : "next-auth.session-token",
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: process.env.NODE_ENV === "production",
-      },
-    },
-  },
 };
 
 export function getAuthSession() {
