@@ -4,10 +4,12 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { api } from "@/lib/api";
 import { useSession } from "next-auth/react";
+import toast from "react-hot-toast";
 
 export default function MemberPage() {
   const { data: session } = useSession();
   const [profile, setProfile] = useState<any>(null);
+  const [familyInfo, setFamilyInfo] = useState<any>(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ name: "", bio: "", phone: "" });
   const [stats, setStats] = useState({ posts: 0, comments: 0, likes: 0 });
@@ -16,6 +18,9 @@ export default function MemberPage() {
     api.profile.get().then((data) => {
       setProfile(data);
       setForm({ name: data.name || "", bio: data.bio || "", phone: data.phone || "" });
+    }).catch(() => {});
+    api.family.info().then((data) => {
+      if (data.family) setFamilyInfo(data);
     }).catch(() => {});
   }, []);
 
@@ -26,6 +31,13 @@ export default function MemberPage() {
       setProfile(updated);
     } catch (e) { console.error(e); }
     setSaving(false);
+  };
+
+  const copyCode = () => {
+    if (familyInfo?.family?.inviteCode) {
+      navigator.clipboard.writeText(familyInfo.family.inviteCode);
+      toast.success("Код скопирован");
+    }
   };
 
   return (
@@ -41,6 +53,21 @@ export default function MemberPage() {
           </div>
         </div>
       </motion.div>
+
+      {familyInfo?.family && (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card p-5 mb-6 flex items-center justify-between">
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">Семья</p>
+            <p className="font-semibold text-lg">{familyInfo.family.name}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-xs text-muted-foreground mb-1">Код приглашения</p>
+            <button onClick={copyCode} className="font-mono font-bold tracking-widest text-lg text-primary hover:opacity-80 transition-all">
+              {familyInfo.family.inviteCode}
+            </button>
+          </div>
+        </motion.div>
+      )}
 
       <div className="grid md:grid-cols-3 gap-6">
         <div className="glass-card p-6 md:col-span-2">
@@ -77,6 +104,19 @@ export default function MemberPage() {
                 <span className="font-semibold">{stat.value}</span>
               </div>
             ))}
+          </div>
+          <div className="mt-4 pt-4 border-t border-border/50">
+            <p className="text-xs text-muted-foreground mb-2">Участники семьи</p>
+            <div className="space-y-2">
+              {(familyInfo?.members || []).map((m: any) => (
+                <div key={m.id} className="flex items-center gap-2 text-sm">
+                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-[10px] font-bold shrink-0">
+                    {(m.name || "?")[0]}
+                  </div>
+                  <span className="truncate">{m.name}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
