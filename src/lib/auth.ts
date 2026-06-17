@@ -52,21 +52,11 @@ export const authOptions: NextAuthOptions = {
       }
     },
     async session({ session, token }) {
-      try {
-        if (session.user) {
-          (session.user as any).id = token.id;
-          (session.user as any).role = token.role;
-          const fresh = await prisma.user.findUnique({ where: { id: token.id as string }, select: { image: true, name: true } });
-          if (fresh) {
-            session.user.image = fresh.image;
-            session.user.name = fresh.name;
-          }
-        }
-        return session;
-      } catch (e) {
-        log("session error:", e);
-        return session;
+      if (session.user) {
+        (session.user as any).id = token.id;
+        (session.user as any).role = token.role;
       }
+      return session;
     },
   },
   pages: {
