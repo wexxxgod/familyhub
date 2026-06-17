@@ -20,6 +20,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "invalid credentials" }, { status: 401 });
     }
 
+    const secret = process.env.NEXTAUTH_SECRET;
+    if (!secret) {
+      return NextResponse.json({ error: "server misconfiguration" }, { status: 500 });
+    }
+
     const token = await encode({
       token: {
         id: user.id,
@@ -27,11 +32,8 @@ export async function POST(req: Request) {
         email: user.email,
         name: user.name,
         picture: user.image,
-        sub: user.id,
-        iat: Math.floor(Date.now() / 1000),
-        exp: Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60,
-      } as any,
-      secret: process.env.NEXTAUTH_SECRET!,
+      },
+      secret,
     });
 
     const isSecure = process.env.NODE_ENV === "production";
