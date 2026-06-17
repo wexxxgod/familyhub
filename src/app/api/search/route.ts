@@ -4,7 +4,7 @@ import { getCurrentUser } from "@/lib/auth-helpers";
 
 export async function GET(req: NextRequest) {
   try {
-    const user = await getCurrentUser();
+    const user = await getCurrentUser(req);
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     if (!user.familyId) return NextResponse.json({ posts: [], users: [], archive: [], events: [] });
 

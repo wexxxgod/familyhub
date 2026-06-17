@@ -1,7 +1,7 @@
 import { prisma } from "./prisma";
 import { jwtDecrypt, EncryptJWT } from "jose";
 import { createHash } from "crypto";
-import { headers } from "next/headers";
+import { headers, cookies } from "next/headers";
 import { NextResponse, NextRequest } from "next/server";
 
 const COOKIE_NAME_SECURE = "__Secure-next-auth.session-token";
@@ -77,6 +77,11 @@ export async function getCurrentUser(req?: NextRequest) {
   }
   if (!token) {
     token = getTokenFromHeaders();
+  }
+  if (!token) {
+    try {
+      token = cookies().get(COOKIE_NAME)?.value || null;
+    } catch {}
   }
   if (!token) return null;
 
