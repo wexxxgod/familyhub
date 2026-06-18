@@ -34,28 +34,17 @@ export function ServiceWorkerRegister() {
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
 
     navigator.serviceWorker.register("/sw.js")
-      .then((registration) => {
+      .then(async (registration) => {
         if (Notification.permission === "granted") {
           subscribe(registration);
+        } else if (Notification.permission === "default") {
+          const result = await Notification.requestPermission();
+          if (result === "granted") {
+            subscribe(registration);
+          }
         }
       })
-      .catch(() => {
-        console.warn("Service worker registration failed");
-      });
-  }, [subscribe]);
-
-  useEffect(() => {
-    if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
-
-    const handler = () => {
-      if (Notification.permission === "granted") {
-        navigator.serviceWorker.ready.then(subscribe);
-      }
-    };
-
-    const btn = document.getElementById("enable-push-btn");
-    btn?.addEventListener("click", handler);
-    return () => btn?.removeEventListener("click", handler);
+      .catch(() => {});
   }, [subscribe]);
 
   return null;
