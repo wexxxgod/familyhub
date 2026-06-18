@@ -27,7 +27,7 @@ export function MobileNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 lg:hidden glass border-x-0 border-b-0 rounded-none z-40">
-      <div className="flex items-center overflow-x-auto flex-nowrap py-2 px-2 gap-0.5 scrollbar-hide">
+      <div className="flex items-center justify-between overflow-x-auto flex-nowrap py-2 px-1 scrollbar-hide">
         {items.map((item) => {
           const isActive = pathname === item.href;
           return (
@@ -36,14 +36,14 @@ export function MobileNav() {
               href={item.href}
               aria-current={isActive ? "page" : undefined}
               className={cn(
-                "flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-2xl transition-all duration-200 min-w-[56px]",
+                "flex flex-col items-center gap-0.5 py-1.5 rounded-2xl transition-all duration-200 flex-1 min-w-0",
                 isActive
                   ? "bg-gradient-to-b from-amber-500/15 to-orange-500/10 text-primary shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
               <span className="text-lg">{item.icon}</span>
-              <span className="text-[10px] font-medium whitespace-nowrap">{item.label}</span>
+              <span className="text-[10px] font-medium leading-tight truncate max-w-full px-0.5">{item.label}</span>
             </Link>
           );
         })}

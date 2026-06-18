@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
           userId: post.authorId,
         },
       });
-      notifyUser(post.authorId, {
+      await notifyUser(post.authorId, {
         title: "Новый лайк ❤️",
         body: `${user.name || "Кто-то"} оценил ваш пост`,
         link: "/feed",

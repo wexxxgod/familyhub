@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
           userId: post.authorId,
         },
       });
-      notifyUser(post.authorId, {
+      await notifyUser(post.authorId, {
         title: "Новый комментарий 💬",
         body: `${user.name || "Кто-то"}: ${content.slice(0, 80)}`,
         link: "/feed",

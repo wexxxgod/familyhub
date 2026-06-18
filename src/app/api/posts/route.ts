@@ -69,6 +69,7 @@ export async function POST(req: NextRequest) {
       select: { id: true },
     });
 
+    const pushPromises: Promise<void>[] = [];
     for (const member of familyMembers) {
       await prisma.notification.create({
         data: {
@@ -79,12 +80,15 @@ export async function POST(req: NextRequest) {
           userId: member.id,
         },
       });
-      notifyUser(member.id, {
-        title: `Новый пост от ${user.name || "FamilyHub"} 📝`,
-        body: (content || "Без текста").slice(0, 120),
-        link: "/feed",
-      });
+      pushPromises.push(
+        notifyUser(member.id, {
+          title: `Новый пост от ${user.name || "FamilyHub"} 📝`,
+          body: (content || "Без текста").slice(0, 120),
+          link: "/feed",
+        }),
+      );
     }
+    await Promise.allSettled(pushPromises);
 
     return NextResponse.json(post);
   } catch (error) {
