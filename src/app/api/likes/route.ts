@@ -1,11 +1,11 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-helpers";
+import { getCurrentUser, logError, jsonError, safeInt, safeDate, Role } from "@/lib/auth-helpers";
 
 export async function POST(req: NextRequest) {
   try {
     const user = await getCurrentUser(req);
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!user) return jsonError("Unauthorized", 401);
 
     const { postId } = await req.json();
 
@@ -38,7 +38,8 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ liked: true });
-  } catch {
-    return NextResponse.json({ error: "Failed to toggle like" }, { status: 500 });
+  } catch (error) {
+    logError("likes_POST", error);
+    return jsonError("Failed to toggle like", 500);
   }
 }

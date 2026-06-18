@@ -1,11 +1,11 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-helpers";
+import { getCurrentUser, logError, jsonError, safeInt, safeDate, Role } from "@/lib/auth-helpers";
 
 export async function GET(req: NextRequest) {
   try {
     const user = await getCurrentUser(req);
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!user) return jsonError("Unauthorized", 401);
 
     if (!user.familyId) return NextResponse.json([]);
 
@@ -14,44 +14,47 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: "desc" },
     });
     return NextResponse.json(memories);
-  } catch {
-    return NextResponse.json({ error: "Failed to fetch memories" }, { status: 500 });
+  } catch (error) {
+    logError("memories_GET", error);
+    return jsonError("Failed to fetch memories", 500);
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
     const user = await getCurrentUser(req);
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!user) return jsonError("Unauthorized", 401);
     const data = await req.json();
     const memory = await prisma.memory.create({
       data: {
         title: data.title,
         content: data.content,
         image: data.image,
-        year: data.year ? parseInt(data.year) : null,
+        year: data.year ? safeInt(data.year) : null,
         authorId: user.id,
       },
     });
     return NextResponse.json(memory);
-  } catch {
-    return NextResponse.json({ error: "Failed to create memory" }, { status: 500 });
+  } catch (error) {
+    logError("memories_POST", error);
+    return jsonError("Failed to create memory", 500);
   }
 }
 
 export async function DELETE(req: NextRequest) {
   try {
     const user = await getCurrentUser(req);
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!user) return jsonError("Unauthorized", 401);
     const { id } = await req.json();
     const memory = await prisma.memory.findUnique({ where: { id } });
     if (!memory) return NextResponse.json({ error: "Not found" }, { status: 404 });
-    if (memory.authorId !== user.id && user.role !== "SUPER_ADMIN") {
+    if (memory.authorId !== user.id && user.role !== Role.SUPER_ADMIN) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
     await prisma.memory.delete({ where: { id } });
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: "Failed to delete memory" }, { status: 500 });
+  } catch (error) {
+    logError("memories_DELETE", error);
+    return jsonError("Failed to delete memory", 500);
   }
 }

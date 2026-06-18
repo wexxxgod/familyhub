@@ -1,11 +1,11 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-helpers";
+import { getCurrentUser, logError, jsonError, safeInt, safeDate, Role } from "@/lib/auth-helpers";
 
 export async function PATCH(req: NextRequest) {
   try {
     const user = await getCurrentUser(req);
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!user) return jsonError("Unauthorized", 401);
     const data = await req.json();
     const updated = await prisma.user.update({
       where: { id: user.id },
@@ -13,20 +13,21 @@ export async function PATCH(req: NextRequest) {
         name: data.name,
         bio: data.bio,
         phone: data.phone,
-        dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : undefined,
+        dateOfBirth: data.dateOfBirth ? safeDate(data.dateOfBirth) : undefined,
         image: data.image,
       },
     });
     return NextResponse.json(updated);
-  } catch {
-    return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });
+  } catch (error) {
+    logError("update_profile", error);
+    return jsonError("Failed to update profile", 500);
   }
 }
 
 export async function GET(req: NextRequest) {
   try {
     const user = await getCurrentUser(req);
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!user) return jsonError("Unauthorized", 401);
     const [profile, posts, comments, likesAgg] = await Promise.all([
       prisma.user.findUnique({
         where: { id: user.id },
@@ -40,7 +41,8 @@ export async function GET(req: NextRequest) {
       prisma.like.count({ where: { userId: user.id } }),
     ]);
     return NextResponse.json({ ...profile, stats: { posts, comments, likes: likesAgg } });
-  } catch {
-    return NextResponse.json({ error: "Failed to fetch profile" }, { status: 500 });
+  } catch (error) {
+    logError("get_profile", error);
+    return jsonError("Failed to fetch profile", 500);
   }
 }

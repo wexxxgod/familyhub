@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { createSessionToken, setSessionCookie } from "@/lib/auth-helpers";
+import { createSessionToken, setSessionCookie, logError, jsonError } from "@/lib/auth-helpers";
 
 export async function POST(req: NextRequest) {
   try {
@@ -35,8 +35,8 @@ export async function POST(req: NextRequest) {
     const response = NextResponse.json({ ok: true, user: { id: user.id, email: user.email, name: user.name } });
     setSessionCookie(response, token);
     return response;
-  } catch (e) {
-    console.error("[LOGIN ERROR]", e);
-    return NextResponse.json({ error: String(e) }, { status: 500 });
+  } catch (error) {
+    logError("login", error);
+    return jsonError("Внутренняя ошибка сервера", 500);
   }
 }

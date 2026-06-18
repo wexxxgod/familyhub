@@ -1,11 +1,11 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-helpers";
+import { getCurrentUser, logError, jsonError, safeInt, safeDate, Role } from "@/lib/auth-helpers";
 
 export async function POST(req: NextRequest) {
   try {
     const user = await getCurrentUser(req);
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!user) return jsonError("Unauthorized", 401);
 
     const { postId, content } = await req.json();
 
@@ -32,24 +32,26 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json(comment);
-  } catch {
-    return NextResponse.json({ error: "Failed to create comment" }, { status: 500 });
+  } catch (error) {
+    logError("comments_POST", error);
+    return jsonError("Failed to create comment", 500);
   }
 }
 
 export async function DELETE(req: NextRequest) {
   try {
     const user = await getCurrentUser(req);
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!user) return jsonError("Unauthorized", 401);
     const { id } = await req.json();
     const comment = await prisma.comment.findUnique({ where: { id } });
     if (!comment) return NextResponse.json({ error: "Not found" }, { status: 404 });
-    if (comment.authorId !== user.id && user.role !== "SUPER_ADMIN") {
+    if (comment.authorId !== user.id && user.role !== Role.SUPER_ADMIN) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
     await prisma.comment.delete({ where: { id } });
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: "Failed to delete comment" }, { status: 500 });
+  } catch (error) {
+    logError("comments_DELETE", error);
+    return jsonError("Failed to delete comment", 500);
   }
 }

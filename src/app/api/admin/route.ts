@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireRole } from "@/lib/auth-helpers";
+import { requireRole, logError, jsonError, safeInt, safeDate, Role } from "@/lib/auth-helpers";
 
 export async function GET(req: NextRequest) {
   try {
@@ -9,19 +9,22 @@ export async function GET(req: NextRequest) {
 
     const familyFilter = { familyId: user.familyId };
 
-    const stats = {
-      users: await prisma.user.count({ where: familyFilter }),
-      posts: await prisma.post.count({ where: { author: familyFilter } }),
-      comments: await prisma.comment.count({ where: { author: familyFilter } }),
-      likes: await prisma.like.count({ where: { user: familyFilter } }),
-      archiveItems: await prisma.archiveItem.count({ where: { uploadedBy: familyFilter } }),
-      events: await prisma.event.count({ where: { createdBy: familyFilter } }),
-      memories: await prisma.memory.count({ where: { author: familyFilter } }),
-    };
+    const [users, posts, comments, likes, archiveItems, events, memories] = await Promise.all([
+      prisma.user.count({ where: familyFilter }),
+      prisma.post.count({ where: { author: familyFilter } }),
+      prisma.comment.count({ where: { author: familyFilter } }),
+      prisma.like.count({ where: { user: familyFilter } }),
+      prisma.archiveItem.count({ where: { uploadedBy: familyFilter } }),
+      prisma.event.count({ where: { createdBy: familyFilter } }),
+      prisma.memory.count({ where: { author: familyFilter } }),
+    ]);
+
+    const stats = { users, posts, comments, likes, archiveItems, events, memories };
 
     return NextResponse.json(stats);
-  } catch {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  } catch (error) {
+    logError("admin_get_stats", error);
+    return jsonError("Ошибка получения статистики", 500);
   }
 }
 
@@ -44,7 +47,8 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ error: "Unknown action" }, { status: 400 });
-  } catch {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  } catch (error) {
+    logError("admin_action", error);
+    return jsonError("Ошибка выполнения действия", 500);
   }
 }

@@ -1,11 +1,11 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, createSessionToken, setSessionCookie } from "@/lib/auth-helpers";
+import { getCurrentUser, createSessionToken, setSessionCookie, logError, jsonError, safeInt, safeDate, Role } from "@/lib/auth-helpers";
 
 export async function POST(req: NextRequest) {
   try {
     const user = await getCurrentUser(req);
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!user) return jsonError("Unauthorized", 401);
 
     if (user.familyId) {
       return NextResponse.json({ error: "Вы уже в семье" }, { status: 400 });
@@ -44,7 +44,8 @@ export async function POST(req: NextRequest) {
 
     if (token) setSessionCookie(response, token);
     return response;
-  } catch {
-    return NextResponse.json({ error: "Failed to join family" }, { status: 500 });
+  } catch (error) {
+    logError("family_join_POST", error);
+    return jsonError("Failed to join family", 500);
   }
 }

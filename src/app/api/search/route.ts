@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-helpers";
+import { getCurrentUser, logError, jsonError, safeInt, safeDate, Role } from "@/lib/auth-helpers";
 
 export async function GET(req: NextRequest) {
   try {
     const user = await getCurrentUser(req);
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!user) return jsonError("Unauthorized", 401);
     if (!user.familyId) return NextResponse.json({ posts: [], users: [], archive: [], events: [] });
 
     const q = req.nextUrl.searchParams.get("q") || "";
@@ -44,7 +44,8 @@ export async function GET(req: NextRequest) {
     ]);
 
     return NextResponse.json({ posts, users, archive, events });
-  } catch {
-    return NextResponse.json({ error: "Search failed" }, { status: 500 });
+  } catch (error) {
+    logError("search", error);
+    return jsonError("Search failed", 500);
   }
 }

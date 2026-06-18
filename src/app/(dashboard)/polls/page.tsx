@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { SkeletonCard } from "@/components/shared/SkeletonCard";
 import { api } from "@/lib/api";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import toast from "react-hot-toast";
@@ -58,22 +61,14 @@ export default function PollsPage() {
 
   if (loading) {
     return <div className="max-w-3xl mx-auto px-4 py-8">
-      <div className="space-y-4">{[1, 2].map((i) => <div key={i} className="glass-card p-6 animate-pulse"><div className="h-4 bg-accent rounded w-1/2 mb-4" /><div className="h-10 bg-accent rounded mb-2" /><div className="h-10 bg-accent rounded mb-2" /></div>)}</div>
+      <PageHeader title="Семейные опросы" description="Принимайте решения вместе" />
+      <div className="space-y-4">{[1, 2].map((i) => <SkeletonCard key={i} lines={3} />)}</div>
     </div>;
   }
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8 flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-bold mb-1">Семейные опросы</h1>
-          <p className="text-muted-foreground">Принимайте решения вместе</p>
-        </div>
-        <button onClick={() => setShowCreate(true)} className="px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-all flex items-center gap-2">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
-          Создать
-        </button>
-      </motion.div>
+      <PageHeader title="Семейные опросы" description="Принимайте решения вместе" action={<button onClick={() => setShowCreate(true)} className="px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-all flex items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>Создать</button>} />
 
       {showCreate && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-6 mb-8">
@@ -102,14 +97,7 @@ export default function PollsPage() {
       )}
 
       {polls.length === 0 && !showCreate ? (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-card p-12 text-center">
-          <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center mx-auto mb-4">
-            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-purple-500">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></svg>
-          </div>
-          <h3 className="text-xl font-semibold mb-2">Опросов пока нет</h3>
-          <p className="text-muted-foreground text-sm max-w-md mx-auto">Создайте первый опрос</p>
-        </motion.div>
+        <EmptyState icon={<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-purple-500"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></svg>} title="Опросов пока нет" description="Создайте первый опрос" />
       ) : (
         <div className="space-y-6">
           {polls.map((poll) => {

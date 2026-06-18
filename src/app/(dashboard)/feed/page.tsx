@@ -7,6 +7,9 @@ import { CreatePost } from "@/components/feed/CreatePost";
 import { api } from "@/lib/api";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import toast from "react-hot-toast";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { SkeletonCard } from "@/components/shared/SkeletonCard";
 
 const POSTS_PER_PAGE = 10;
 
@@ -123,25 +126,24 @@ export default function FeedPage() {
     }
   };
 
+  const refreshButton = (
+    <button
+      onClick={() => { setVisibleCount(POSTS_PER_PAGE); fetchPosts(true); }}
+      disabled={refreshing}
+      className={`p-2.5 rounded-xl hover:bg-accent transition-all ${refreshing ? "opacity-50" : ""}`}
+      aria-label="Обновить"
+    >
+      <svg className={`w-5 h-5 ${refreshing ? "animate-spin" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="23 4 23 10 17 10" /><polyline points="1 20 1 14 7 14" /><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+      </svg>
+    </button>
+  );
+
   if (loading) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-8">
         <div className="space-y-6">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="glass-card p-4 animate-pulse">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-accent" />
-                <div className="space-y-2 flex-1">
-                  <div className="h-3 bg-accent rounded w-1/3" />
-                  <div className="h-2 bg-accent rounded w-1/4" />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <div className="h-3 bg-accent rounded w-full" />
-                <div className="h-3 bg-accent rounded w-2/3" />
-              </div>
-            </div>
-          ))}
+          {Array.from({length:3}).map((_,i)=><SkeletonCard key={i} lines={2}/>)}
         </div>
       </div>
     );
@@ -149,37 +151,12 @@ export default function FeedPage() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold mb-1">Семейная лента</h1>
-            <p className="text-muted-foreground">Делитесь событиями с близкими</p>
-          </div>
-          <button
-            onClick={() => { setVisibleCount(POSTS_PER_PAGE); fetchPosts(true); }}
-            disabled={refreshing}
-            className={`p-2.5 rounded-xl hover:bg-accent transition-all ${refreshing ? "opacity-50" : ""}`}
-            title="Обновить"
-          >
-            <svg className={`w-5 h-5 ${refreshing ? "animate-spin" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="23 4 23 10 17 10" /><polyline points="1 20 1 14 7 14" /><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-            </svg>
-          </button>
-        </div>
-      </motion.div>
+      <PageHeader title="Семейная лента" description="Делитесь событиями с близкими" action={refreshButton} />
 
       <CreatePost onSubmit={handleCreatePost} />
 
       {posts.length === 0 ? (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mt-12 text-center">
-          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center mx-auto mb-4">
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-purple-500">
-              <rect x="3" y="3" width="18" height="18" rx="2" /><line x1="9" y1="9" x2="15" y2="15" /><line x1="15" y1="9" x2="9" y2="15" />
-            </svg>
-          </div>
-          <h3 className="text-lg font-semibold mb-2">В ленте пока пусто</h3>
-          <p className="text-muted-foreground text-sm max-w-sm mx-auto">Опубликуйте первый пост</p>
-        </motion.div>
+        <EmptyState icon={<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-purple-500"><rect x="3" y="3" width="18" height="18" rx="2" /><line x1="9" y1="9" x2="15" y2="15" /><line x1="15" y1="9" x2="9" y2="15" /></svg>} title="В ленте пока пусто" description="Опубликуйте первый пост" />
       ) : (
         <div className="space-y-6 mt-8">
           {posts.map((post, i) => (

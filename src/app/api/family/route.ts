@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, createSessionToken, setSessionCookie } from "@/lib/auth-helpers";
+import { getCurrentUser, createSessionToken, setSessionCookie, logError, jsonError, safeInt, safeDate, Role } from "@/lib/auth-helpers";
 import crypto from "crypto";
 
 function generateInviteCode(): string {
@@ -10,7 +10,7 @@ function generateInviteCode(): string {
 export async function GET(req: NextRequest) {
   try {
     const user = await getCurrentUser(req);
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!user) return jsonError("Unauthorized", 401);
 
     if (!user.familyId) {
       return NextResponse.json({ family: null, members: [], isCreator: false });
@@ -30,15 +30,16 @@ export async function GET(req: NextRequest) {
       members: family.members,
       isCreator: family.createdBy === user.id,
     });
-  } catch {
-    return NextResponse.json({ error: "Failed to fetch family" }, { status: 500 });
+  } catch (error) {
+    logError("family_GET", error);
+    return jsonError("Failed to fetch family", 500);
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
     const user = await getCurrentUser(req);
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!user) return jsonError("Unauthorized", 401);
 
     if (user.familyId) {
       return NextResponse.json({ error: "Вы уже в семье" }, { status: 400 });
@@ -61,7 +62,7 @@ export async function POST(req: NextRequest) {
 
     await prisma.user.update({
       where: { id: user.id },
-      data: { familyId: family.id, role: "PARENT" },
+      data: { familyId: family.id, role: Role.PARENT },
     });
 
     const token = await createSessionToken({
@@ -80,18 +81,19 @@ export async function POST(req: NextRequest) {
 
     if (token) setSessionCookie(response, token);
     return response;
-  } catch (e: any) {
-    if (e?.code === "P2002") {
+  } catch (error: any) {
+    logError("family_POST", error);
+    if (error?.code === "P2002") {
       return NextResponse.json({ error: "Семья с таким названием уже существует" }, { status: 409 });
     }
-    return NextResponse.json({ error: "Ошибка создания семьи" }, { status: 500 });
+    return jsonError("Ошибка создания семьи", 500);
   }
 }
 
 export async function DELETE(req: NextRequest) {
   try {
     const user = await getCurrentUser(req);
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!user) return jsonError("Unauthorized", 401);
 
     if (!user.familyId) {
       return NextResponse.json({ error: "Вы не в семье" }, { status: 400 });
@@ -118,15 +120,16 @@ export async function DELETE(req: NextRequest) {
     });
 
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: "Ошибка удаления" }, { status: 500 });
+  } catch (error) {
+    logError("family_DELETE", error);
+    return jsonError("Ошибка удаления", 500);
   }
 }
 
 export async function PATCH(req: NextRequest) {
   try {
     const user = await getCurrentUser(req);
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!user) return jsonError("Unauthorized", 401);
 
     if (!user.familyId) {
       return NextResponse.json({ error: "Вы не в семье" }, { status: 400 });
@@ -144,7 +147,8 @@ export async function PATCH(req: NextRequest) {
     });
 
     return NextResponse.json({ inviteCode });
-  } catch {
-    return NextResponse.json({ error: "Failed to regenerate code" }, { status: 500 });
+  } catch (error) {
+    logError("family_PATCH", error);
+    return jsonError("Failed to regenerate code", 500);
   }
 }

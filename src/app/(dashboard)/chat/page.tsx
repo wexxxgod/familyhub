@@ -39,8 +39,12 @@ export default function ChatPage() {
 
   useEffect(() => {
     if (!currentUserId) return;
-    const t = setInterval(fetchMessages, 5000);
-    return () => clearInterval(t);
+    const handleVisibility = () => {
+      if (document.hidden) clearInterval(t);
+    };
+    const t = setInterval(() => { if (!document.hidden) fetchMessages(); }, 5000);
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => { clearInterval(t); document.removeEventListener("visibilitychange", handleVisibility); };
   }, [currentUserId, fetchMessages]);
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
@@ -120,7 +124,7 @@ export default function ChatPage() {
         {selectedContact ? (
           <>
             <div className="p-4 border-b border-border/50 flex items-center gap-3">
-              <button onClick={() => setSelectedContact(null)} className="md:hidden p-1">
+              <button aria-label="Назад" onClick={() => setSelectedContact(null)} className="md:hidden p-1">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6" /></svg>
               </button>
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-semibold text-sm">
@@ -134,7 +138,7 @@ export default function ChatPage() {
                 const fromMe = isFromMe(msg);
                 return (
                   <div key={msg.id} className={`flex ${fromMe ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-[70%] p-3 rounded-2xl text-sm ${
+                    <div className={`max-w-[70%] p-3 rounded-2xl text-sm animate-message-in ${
                       fromMe ? "bg-primary text-primary-foreground rounded-br-md" : "bg-accent rounded-bl-md"
                     }`}>
                       <p className="text-xs text-muted-foreground mb-1">
@@ -161,6 +165,7 @@ export default function ChatPage() {
                 <button
                   onClick={handleSend}
                   disabled={!input.trim()}
+                  aria-label="Отправить"
                   className="p-2.5 rounded-xl bg-primary text-primary-foreground disabled:opacity-50 transition-all"
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>

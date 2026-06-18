@@ -1,11 +1,11 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-helpers";
+import { getCurrentUser, logError, jsonError, safeInt, safeDate, Role } from "@/lib/auth-helpers";
 
 export async function GET(req: NextRequest) {
   try {
     const user = await getCurrentUser(req);
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!user) return jsonError("Unauthorized", 401);
     if (!user.familyId) return NextResponse.json([]);
 
     const users = await prisma.user.findMany({
@@ -13,7 +13,8 @@ export async function GET(req: NextRequest) {
       select: { id: true, name: true, email: true, image: true, role: true },
     });
     return NextResponse.json(users);
-  } catch {
-    return NextResponse.json({ error: "Failed to fetch members" }, { status: 500 });
+  } catch (error) {
+    logError("get_members", error);
+    return jsonError("Failed to fetch members", 500);
   }
 }

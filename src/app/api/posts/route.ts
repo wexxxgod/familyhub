@@ -1,11 +1,11 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-helpers";
+import { getCurrentUser, logError, jsonError, safeInt, safeDate, Role } from "@/lib/auth-helpers";
 
 export async function GET(req: NextRequest) {
   try {
     const user = await getCurrentUser(req);
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!user) return jsonError("Unauthorized", 401);
 
     if (!user.familyId) {
       return NextResponse.json([]);
@@ -24,15 +24,16 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.json(posts);
-  } catch {
-    return NextResponse.json({ error: "Failed to fetch posts" }, { status: 500 });
+  } catch (error) {
+    logError("posts_GET", error);
+    return jsonError("Failed to fetch posts", 500);
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
     const user = await getCurrentUser(req);
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!user) return jsonError("Unauthorized", 401);
 
     const { content, image, video, document, tags, visibility } = await req.json();
 
@@ -54,24 +55,26 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json(post);
-  } catch {
-    return NextResponse.json({ error: "Failed to create post" }, { status: 500 });
+  } catch (error) {
+    logError("posts_POST", error);
+    return jsonError("Failed to create post", 500);
   }
 }
 
 export async function DELETE(req: NextRequest) {
   try {
     const user = await getCurrentUser(req);
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!user) return jsonError("Unauthorized", 401);
     const { id } = await req.json();
     const post = await prisma.post.findUnique({ where: { id } });
     if (!post) return NextResponse.json({ error: "Not found" }, { status: 404 });
-    if (post.authorId !== user.id && user.role !== "SUPER_ADMIN" && user.role !== "PARENT") {
+    if (post.authorId !== user.id && user.role !== Role.SUPER_ADMIN && user.role !== Role.PARENT) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
     await prisma.post.delete({ where: { id } });
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: "Failed to delete post" }, { status: 500 });
+  } catch (error) {
+    logError("posts_DELETE", error);
+    return jsonError("Failed to delete post", 500);
   }
 }

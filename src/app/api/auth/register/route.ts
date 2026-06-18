@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import { logError, jsonError, Role } from "@/lib/auth-helpers";
 
 export async function POST(req: Request) {
   try {
@@ -26,7 +27,7 @@ export async function POST(req: Request) {
         name,
         email,
         passwordHash,
-        role: "FAMILY_MEMBER",
+        role: Role.FAMILY_MEMBER,
       },
     });
 
@@ -36,7 +37,7 @@ export async function POST(req: Request) {
       email: user.email,
     });
   } catch (error) {
-    console.error("Registration error:", error);
-    return NextResponse.json({ error: "Внутренняя ошибка сервера" }, { status: 500 });
+    logError("register", error);
+    return jsonError("Внутренняя ошибка сервера", 500);
   }
 }

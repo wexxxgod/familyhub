@@ -1,11 +1,11 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-helpers";
+import { getCurrentUser, logError, jsonError, safeInt, safeDate, Role } from "@/lib/auth-helpers";
 
 export async function POST(req: NextRequest) {
   try {
     const user = await getCurrentUser(req);
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!user) return jsonError("Unauthorized", 401);
     const { pollId, option } = await req.json();
     const existing = await prisma.pollVote.findUnique({
       where: { pollId_userId: { pollId, userId: user.id } },
@@ -17,7 +17,8 @@ export async function POST(req: NextRequest) {
       data: { option, pollId, userId: user.id },
     });
     return NextResponse.json(vote);
-  } catch {
-    return NextResponse.json({ error: "Failed to vote" }, { status: 500 });
+  } catch (error) {
+    logError("polls_vote_POST", error);
+    return jsonError("Failed to vote", 500);
   }
 }

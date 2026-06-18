@@ -83,6 +83,7 @@ model User {
   polls         Poll[]
   activityLogs  ActivityLog[]
 
+  @@index([familyId])
   @@map("users")
 }
 
@@ -146,6 +147,7 @@ model ArchiveItem {
   uploadedById String
   uploadedBy   User             @relation(fields: [uploadedById], references: [id])
 
+  @@index([uploadedById])
   @@map("archive_items")
 }
 
@@ -188,6 +190,7 @@ model Message {
   chatRoomId String?
   chatRoom   ChatRoom? @relation(fields: [chatRoomId], references: [id])
 
+  @@index([senderId, receiverId])
   @@map("messages")
 }
 
@@ -227,6 +230,7 @@ model Event {
   createdById String
   createdBy   User   @relation(fields: [createdById], references: [id])
 
+  @@index([createdById])
   @@map("events")
 }
 
@@ -242,6 +246,7 @@ model Memory {
   authorId String
   author   User   @relation(fields: [authorId], references: [id])
 
+  @@index([authorId])
   @@map("memories")
 }
 
@@ -286,6 +291,7 @@ model Notification {
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId, read])
   @@map("notifications")
 }
 

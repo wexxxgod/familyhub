@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { SkeletonCard } from "@/components/shared/SkeletonCard";
 import { api } from "@/lib/api";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import toast from "react-hot-toast";
@@ -51,15 +54,30 @@ export default function CalendarPage() {
   });
   const eventDays = new Set(monthEvents.map((e) => new Date(e.date).getDate()));
 
+  if (loading) {
+    return (
+      <div className="max-w-5xl mx-auto px-4 py-8">
+        <PageHeader title="Семейный календарь" description="Дни рождения, годовщины и важные даты" />
+        <div className="grid lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 glass-card p-6 animate-pulse">
+            <div className="h-6 bg-accent rounded w-1/3 mx-auto mb-6" />
+            <div className="grid grid-cols-7 gap-1">
+              {Array.from({ length: 35 }).map((_, i) => <div key={i} className="h-8 bg-accent rounded" />)}
+            </div>
+          </div>
+          <div className="glass-card p-6 animate-pulse">
+            <div className="h-5 bg-accent rounded w-1/2 mb-4" />
+            <div className="h-16 bg-accent rounded mb-2" />
+            <div className="h-16 bg-accent rounded" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8 flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-bold mb-1">Семейный календарь</h1>
-          <p className="text-muted-foreground">Дни рождения, годовщины и важные даты</p>
-        </div>
-        <button onClick={() => setShowCreate(!showCreate)} className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-all">+ Событие</button>
-      </motion.div>
+      <PageHeader title="Семейный календарь" description="Дни рождения, годовщины и важные даты" action={<button onClick={() => setShowCreate(!showCreate)} className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-all">+ Событие</button>} />
 
       {showCreate && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-6 mb-6">
@@ -109,13 +127,7 @@ export default function CalendarPage() {
         <div className="glass-card p-6">
           <h3 className="font-semibold mb-4">События месяца</h3>
           {monthEvents.length === 0 ? (
-            <div className="text-center py-8">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center mx-auto mb-3">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-purple-500">
-                  <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /></svg>
-              </div>
-              <p className="text-sm text-muted-foreground">Нет событий</p>
-            </div>
+            <EmptyState icon={<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-purple-500"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /></svg>} title="" description="Нет событий" />
           ) : (
             <div className="space-y-3">
               {monthEvents.map((event) => (

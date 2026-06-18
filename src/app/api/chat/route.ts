@@ -1,11 +1,11 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth-helpers";
+import { getCurrentUser, logError, jsonError, safeInt, safeDate, Role } from "@/lib/auth-helpers";
 
 export async function GET(req: NextRequest) {
   try {
     const user = await getCurrentUser(req);
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!user) return jsonError("Unauthorized", 401);
 
     const messages = await prisma.message.findMany({
       where: {
@@ -17,15 +17,16 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.json(messages);
-  } catch {
-    return NextResponse.json({ error: "Failed to fetch messages" }, { status: 500 });
+  } catch (error) {
+    logError("get_messages", error);
+    return jsonError("Failed to fetch messages", 500);
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
     const user = await getCurrentUser(req);
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!user) return jsonError("Unauthorized", 401);
 
     const { content, receiverId, chatRoomId } = await req.json();
 
@@ -50,7 +51,8 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json(message);
-  } catch {
-    return NextResponse.json({ error: "Failed to send message" }, { status: 500 });
+  } catch (error) {
+    logError("send_message", error);
+    return jsonError("Failed to send message", 500);
   }
 }

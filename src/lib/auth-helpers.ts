@@ -4,6 +4,33 @@ import { createHash } from "crypto";
 import { headers, cookies } from "next/headers";
 import { NextResponse, NextRequest } from "next/server";
 
+export const Role = { SUPER_ADMIN: "SUPER_ADMIN", PARENT: "PARENT", FAMILY_MEMBER: "FAMILY_MEMBER", GUEST: "GUEST" } as const;
+
+export function logError(route: string, error: unknown) {
+  console.error(`[${route}]`, error instanceof Error ? error.message : error);
+}
+
+export function jsonError(message: string, status: number) {
+  return NextResponse.json({ error: message }, { status });
+}
+
+export function safeInt(value: unknown): number | null {
+  if (value == null) return null;
+  const n = typeof value === "number" ? value : parseInt(String(value), 10);
+  return isNaN(n) ? null : n;
+}
+
+export function safeDate(value: unknown): Date | null {
+  if (value == null) return null;
+  const d = new Date(String(value));
+  return isNaN(d.getTime()) ? null : d;
+}
+
+export function hasFamilyScope(itemFamilyId: string | null | undefined, userFamilyId: string | null | undefined): boolean {
+  if (!itemFamilyId || !userFamilyId) return false;
+  return itemFamilyId === userFamilyId;
+}
+
 const COOKIE_NAME = "familyhub.session";
 
 function getSecretKey(): Uint8Array | null {
@@ -115,13 +142,13 @@ export async function getCurrentUser(req?: NextRequest) {
   }
 }
 
-export async function requireAuth(req?: NextRequest) {
+export async function requireAuth(req?: NextRequest): Promise<NonNullable<Awaited<ReturnType<typeof getCurrentUser>>>> {
   const user = await getCurrentUser(req);
   if (!user) throw new Error("Unauthorized");
   return user;
 }
 
-export async function requireRole(roles: string[], req?: NextRequest) {
+export async function requireRole(roles: readonly string[], req?: NextRequest) {
   const user = await requireAuth(req);
   if (!roles.includes(user.role)) throw new Error("Forbidden");
   return user;

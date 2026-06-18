@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { SkeletonCard } from "@/components/shared/SkeletonCard";
 import { api } from "@/lib/api";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import toast from "react-hot-toast";
@@ -77,6 +79,28 @@ export default function MemberPage() {
     }
   };
 
+  if (!profile && !user) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="flex items-center gap-6 mb-8 animate-pulse">
+          <div className="w-24 h-24 rounded-2xl bg-accent" />
+          <div className="space-y-2">
+            <div className="h-6 bg-accent rounded w-48" />
+            <div className="h-4 bg-accent rounded w-32" />
+          </div>
+        </div>
+        <div className="grid md:grid-cols-3 gap-6">
+          <div className="md:col-span-2 glass-card p-6 animate-pulse">
+            {Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-12 bg-accent rounded mb-4" />)}
+          </div>
+          <div className="glass-card p-6 animate-pulse">
+            {Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-8 bg-accent rounded mb-3" />)}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
@@ -84,7 +108,7 @@ export default function MemberPage() {
           <div className="relative group">
             <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-3xl font-bold overflow-hidden">
               {profile?.image ? (
-                <img src={profile.image} alt="" className="w-full h-full object-cover" />
+                <img src={profile.image} alt={profile.name || "Avatar"} className="w-full h-full object-cover" />
               ) : (
                 (profile?.name?.[0] || user?.name?.[0] || "В")
               )}
@@ -169,7 +193,7 @@ export default function MemberPage() {
                   <div key={m.id} className="flex items-center gap-2 text-sm group">
                     <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-[10px] font-bold shrink-0 overflow-hidden">
                       {m.image ? (
-                        <img src={m.image} alt="" className="w-full h-full object-cover" />
+                        <img src={m.image} alt={m.name || "Avatar"} className="w-full h-full object-cover" />
                       ) : (
                         (m.name || "?")[0]
                       )}
