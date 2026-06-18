@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { api } from "@/lib/api";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { ImageViewer } from "@/components/shared/ImageViewer";
 import toast from "react-hot-toast";
 
 const CATEGORIES = ["Все", "PHOTO", "VIDEO", "DOCUMENT", "CERTIFICATE", "HEIRLOOM"];
@@ -27,6 +28,7 @@ export default function ArchivePage() {
   const [form, setForm] = useState({ title: "", description: "", url: "", category: "PHOTO", year: "" });
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [viewImage, setViewImage] = useState<string | null>(null);
 
   useEffect(() => {
     api.archive.list().then((data) => {
@@ -141,7 +143,7 @@ export default function ArchivePage() {
                 </button>
               )}
               {item.url && (
-                <div className="w-full rounded-xl overflow-hidden mb-3">
+                <div className="w-full rounded-xl overflow-hidden mb-3 cursor-pointer" onClick={() => setViewImage(item.url)}>
                   <img src={item.url} alt={item.title} className="w-full" />
                 </div>
               )}
@@ -235,6 +237,8 @@ export default function ArchivePage() {
           </>
         )}
       </AnimatePresence>
+
+      {viewImage && <ImageViewer src={viewImage} onClose={() => setViewImage(null)} />}
     </div>
   );
 }
