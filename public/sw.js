@@ -66,8 +66,6 @@ self.addEventListener("push", (event) => {
 
   const options = {
     body: data.body,
-    icon: "/icon.png",
-    badge: "/badge.png",
     tag: data.tag || "familyhub",
     data: { link: data.link || "/feed" },
     actions: [

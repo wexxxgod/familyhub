@@ -14,7 +14,7 @@ export function ServiceWorkerRegister() {
       const response = await fetch("/api/notifications/public-key");
       const { publicKey } = await response.json();
 
-      if (!publicKey) return;
+      if (!publicKey || typeof publicKey !== "string") return;
 
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,

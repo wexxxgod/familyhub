@@ -71,12 +71,17 @@ interface PushSubData {
   keys: { p256dh: string; auth: string };
 }
 
+function areVAPIDKeysSet(): boolean {
+  return !!(process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY);
+}
+
 export async function sendPushNotification(
   subscription: PushSubData,
   title: string,
   body: string,
   link?: string,
 ): Promise<boolean> {
+  if (!areVAPIDKeysSet()) return false;
   try {
     const vapidPublicSPKI = fromBase64URL(process.env.VAPID_PUBLIC_KEY!);
     const vapidPublicRaw = extractRawPublicKey(vapidPublicSPKI);
@@ -123,6 +128,7 @@ interface NotifPayload {
 }
 
 export async function notifyUser(userId: string, payload: NotifPayload): Promise<void> {
+  if (!areVAPIDKeysSet()) return;
   try {
     const subs = await prisma.pushSubscription.findMany({ where: { userId } });
     await Promise.allSettled(
@@ -137,5 +143,16 @@ export async function notifyUser(userId: string, payload: NotifPayload): Promise
     );
   } catch {
     // silently fail
+  }
+}
+
+export function getVAPIDPublicKey(): string | null {
+  if (!process.env.VAPID_PUBLIC_KEY) return null;
+  try {
+    const spki = fromBase64URL(process.env.VAPID_PUBLIC_KEY);
+    const raw = spki.subarray(spki.length - 65);
+    return raw.toString("base64");
+  } catch {
+    return null;
   }
 }
