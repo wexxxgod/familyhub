@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { api } from "@/lib/api";
+import { GradientAvatar } from "@/components/shared/GradientAvatar";
 
 export default function ChatPage() {
   const { user } = useCurrentUser();
@@ -107,9 +108,7 @@ export default function ChatPage() {
                   selectedContact?.id === c.id ? "bg-accent" : "hover:bg-accent/50"
                 }`}
               >
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-semibold text-sm shrink-0">
-                  {(c.name || "U")[0]}
-                </div>
+                <GradientAvatar name={c.name} size="md" className="rounded-full" />
                 <div className="min-w-0">
                   <p className="text-sm font-medium truncate">{c.name || "Пользователь"}</p>
                   <p className="text-xs text-muted-foreground truncate">Член семьи</p>
@@ -127,9 +126,7 @@ export default function ChatPage() {
               <button aria-label="Назад" onClick={() => setSelectedContact(null)} className="md:hidden p-1">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6" /></svg>
               </button>
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-semibold text-sm">
-                {(selectedContact.name || "U")[0]}
-              </div>
+              <GradientAvatar name={selectedContact.name} size="md" className="rounded-full" />
               <span className="font-medium">{selectedContact.name}</span>
             </div>
 

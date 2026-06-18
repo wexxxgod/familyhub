@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { SkeletonCard } from "@/components/shared/SkeletonCard";
+import { DeleteButton } from "@/components/shared/DeleteButton";
 import { api } from "@/lib/api";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import toast from "react-hot-toast";
@@ -135,9 +136,7 @@ export default function CalendarPage() {
                   <p className="text-sm font-medium">{event.title}</p>
                   <p className="text-xs text-muted-foreground">{new Date(event.date).toLocaleDateString("ru-RU", { day: "numeric", month: "long" })}</p>
                   {(currentUserId && event.createdById === currentUserId) && (
-                    <button onClick={() => handleDelete(event.id)} className="absolute top-1 right-1 p-1 rounded-md bg-red-500/10 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/20">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
-                    </button>
+                    <DeleteButton onClick={() => handleDelete(event.id)} />
                   )}
                 </div>
               ))}

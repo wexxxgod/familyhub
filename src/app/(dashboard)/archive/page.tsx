@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { api } from "@/lib/api";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { ImageViewer } from "@/components/shared/ImageViewer";
+import { DeleteButton } from "@/components/shared/DeleteButton";
 import toast from "react-hot-toast";
 
 const CATEGORIES = ["Все", "PHOTO", "VIDEO", "DOCUMENT", "CERTIFICATE", "HEIRLOOM"];
@@ -29,6 +30,28 @@ export default function ArchivePage() {
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [viewImage, setViewImage] = useState<string | null>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === "Escape") { setShowModal(false); return; }
+    if (e.key !== "Tab" || !modalRef.current) return;
+    const focusable = modalRef.current.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    if (focusable.length === 0) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  }, []);
+
+  useEffect(() => {
+    if (showModal) {
+      document.addEventListener("keydown", handleKeyDown);
+      modalRef.current?.querySelector<HTMLElement>('button, input, select, textarea, [href]')?.focus();
+    }
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [showModal, handleKeyDown]);
 
   useEffect(() => {
     api.archive.list().then((data) => {
@@ -138,9 +161,7 @@ export default function ArchivePage() {
           {filtered.map((item, i) => (
             <motion.div key={item.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="glass-card p-5 relative group">
               {(currentUserId && item.uploadedById === currentUserId) && (
-                <button onClick={() => handleDelete(item.id)} className="absolute top-2 right-2 p-1.5 rounded-lg bg-red-500/10 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/20">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
-                </button>
+                <DeleteButton onClick={() => handleDelete(item.id)} />
               )}
               {item.url && (
                 <div className="w-full rounded-xl overflow-hidden mb-3 cursor-pointer" onClick={() => setViewImage(item.url)}>
@@ -172,7 +193,7 @@ export default function ArchivePage() {
               exit={{ opacity: 0, scale: 0.95 }}
               className="fixed inset-0 z-50 flex items-center justify-center p-4"
             >
-              <div className="glass-card p-6 w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+              <div ref={modalRef} role="dialog" aria-modal="true" aria-label="Добавить в архив" className="glass-card p-6 w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-bold">Добавить в архив</h2>
                   <button onClick={() => setShowModal(false)} className="p-1.5 rounded-lg hover:bg-accent transition-colors">

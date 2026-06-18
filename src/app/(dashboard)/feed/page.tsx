@@ -104,7 +104,7 @@ export default function FeedPage() {
       const newComment = await api.comments.create(postId, content);
       updatePostInState(postId, (p) => ({
         ...p,
-        comments: [...(p.comments || []), { ...newComment, author: { name: user?.name || "Вы" } }],
+        comments: [...(p.comments || []), newComment],
         commentsCount: (p.commentsCount || 0) + 1,
       }));
       toast.success("Комментарий добавлен");

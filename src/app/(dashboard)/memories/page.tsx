@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { SkeletonCard } from "@/components/shared/SkeletonCard";
+import { DeleteButton } from "@/components/shared/DeleteButton";
 
 export default function MemoriesPage() {
   const { user } = useCurrentUser();
@@ -47,9 +48,7 @@ export default function MemoriesPage() {
           {memories.map((memory, i) => (
             <motion.div key={memory.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} className="glass-card p-6 relative group">
               {(currentUserId && memory.authorId === currentUserId) && (
-                <button onClick={() => handleDelete(memory.id)} className="absolute top-3 right-3 p-1.5 rounded-lg bg-red-500/10 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/20">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
-                </button>
+                <DeleteButton onClick={() => handleDelete(memory.id)} />
               )}
               {memory.image && <img src={memory.image} alt={memory.title} className="w-full rounded-xl mb-4" />}
               <h3 className="font-semibold mb-1">{memory.title}</h3>

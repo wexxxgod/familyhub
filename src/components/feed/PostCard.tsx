@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { formatRelativeDate, formatNumber, getInitials, getAvatarColor } from "@/lib/utils";
+import { formatRelativeDate, formatNumber } from "@/lib/utils";
 import { ImageViewer } from "@/components/shared/ImageViewer";
+import { GradientAvatar } from "@/components/shared/GradientAvatar";
+import { DeleteButton } from "@/components/shared/DeleteButton";
 
 interface PostCardProps {
   post: any;
@@ -35,18 +37,11 @@ export function PostCard({ post, currentUserId, currentUserRole, onToggleLike, o
     <>
       <div className="glass-card overflow-hidden relative group">
         {canDelete && onDelete && (
-          <button aria-label="Удалить пост" onClick={() => onDelete(post.id)} className="absolute top-3 right-3 p-1.5 rounded-lg bg-red-500/10 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/20 z-10">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
-          </button>
+          <DeleteButton onClick={() => onDelete(post.id)} className="z-10 top-3 right-3" />
         )}
         <div className="flex items-center gap-3 p-4 pb-0">
-          <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${getAvatarColor(post.author?.name || "U")} flex items-center justify-center text-white font-bold shrink-0 overflow-hidden`}>
-            {post.author?.image ? (
-              <img src={post.author.image} alt={post.author.name || "Avatar"} className="w-full h-full object-cover" />
-            ) : (
-              getInitials(post.author?.name || "U")
-            )}
-          </div>
+          <GradientAvatar name={post.author?.name} image={post.author?.image} size="md" />
+          
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-sm truncate">{post.author?.name || "Пользователь"}</p>
             <p className="text-xs text-muted-foreground">{formatRelativeDate(post.createdAt)}</p>
@@ -96,13 +91,7 @@ export function PostCard({ post, currentUserId, currentUserRole, onToggleLike, o
               <div className="space-y-2 mb-3 max-h-60 overflow-y-auto">
                 {post.comments.map((c: any) => (
                   <div key={c.id} className="flex gap-2 items-start group/comment">
-                    <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${getAvatarColor(c.author?.name || "U")} flex items-center justify-center text-white font-bold text-[10px] shrink-0 mt-0.5 overflow-hidden`}>
-                      {c.author?.image ? (
-                        <img src={c.author.image} alt={c.author.name || "Avatar"} className="w-full h-full object-cover" />
-                      ) : (
-                        getInitials(c.author?.name || "U")
-                      )}
-                    </div>
+                    <GradientAvatar name={c.author?.name} image={c.author?.image} size="sm" className="mt-0.5" />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-semibold">{c.author?.name}</span>
