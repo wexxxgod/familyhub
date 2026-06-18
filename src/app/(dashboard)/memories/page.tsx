@@ -15,6 +15,7 @@ export default function MemoriesPage() {
   const currentUserId = user?.id;
   const [memories, setMemories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     api.memories.list().then((data) => {
@@ -24,11 +25,14 @@ export default function MemoriesPage() {
   }, []);
 
   const handleDelete = async (id: string) => {
+    if (deletingId) return;
+    setDeletingId(id);
     try {
       await api.memories.delete(id);
       setMemories(memories.filter((m) => m.id !== id));
       toast.success("Воспоминание удалено");
     } catch { toast.error("Ошибка при удалении"); }
+    setDeletingId(null);
   };
 
   if (loading) {
@@ -48,7 +52,7 @@ export default function MemoriesPage() {
           {memories.map((memory, i) => (
             <motion.div key={memory.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} className="glass-card p-6 relative group">
               {(currentUserId && memory.authorId === currentUserId) && (
-                <DeleteButton onClick={() => handleDelete(memory.id)} />
+                <DeleteButton onClick={() => handleDelete(memory.id)} disabled={deletingId === memory.id} />
               )}
               {memory.image && <img src={memory.image} alt={memory.title} className="w-full rounded-xl mb-4" />}
               <h3 className="font-semibold mb-1">{memory.title}</h3>

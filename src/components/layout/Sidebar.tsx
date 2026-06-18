@@ -38,7 +38,7 @@ export function Sidebar() {
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shrink-0 shadow-lg shadow-amber-200/30 group-hover:shadow-amber-200/50 transition-shadow">
             <span className="text-white font-bold text-base">🏠</span>
           </div>
-          <span className="font-semibold text-lg truncate text-gradient font-['Fredoka']">{familyName}</span>
+          <span className="font-semibold text-sm text-gradient font-['Fredoka']" title={familyName}>{familyName}</span>
         </Link>
       </div>
 

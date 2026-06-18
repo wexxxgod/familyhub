@@ -21,6 +21,8 @@ export default function CalendarPage() {
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({ title: "", date: "", type: "CUSTOM" });
+  const [creating, setCreating] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     api.calendar.list().then((data) => {
@@ -30,21 +32,26 @@ export default function CalendarPage() {
   }, []);
 
   const handleCreate = async () => {
-    if (!form.title.trim() || !form.date) return;
+    if (!form.title.trim() || !form.date || creating) return;
+    setCreating(true);
     try {
       const evt = await api.calendar.create({ title: form.title, date: form.date, type: form.type });
       setEvents([...events, evt]);
       setForm({ title: "", date: "", type: "CUSTOM" });
       setShowCreate(false);
     } catch (e) { console.error(e); }
+    setCreating(false);
   };
 
   const handleDelete = async (id: string) => {
+    if (deletingId) return;
+    setDeletingId(id);
     try {
       await api.calendar.delete(id);
       setEvents(events.filter((e) => e.id !== id));
       toast.success("Событие удалено");
     } catch { toast.error("Ошибка при удалении"); }
+    setDeletingId(null);
   };
 
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
@@ -86,7 +93,7 @@ export default function CalendarPage() {
             <input type="text" placeholder="Название" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className="w-full px-4 py-2.5 rounded-xl bg-accent outline-none text-sm" />
             <input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="w-full px-4 py-2.5 rounded-xl bg-accent outline-none text-sm" />
             <div className="flex gap-3">
-              <button onClick={handleCreate} className="px-6 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-all">Сохранить</button>
+              <button onClick={handleCreate} disabled={creating || !form.title.trim() || !form.date} className="px-6 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-all disabled:opacity-50">Сохранить</button>
               <button onClick={() => setShowCreate(false)} className="px-6 py-2.5 rounded-xl bg-accent font-semibold text-sm hover:bg-accent/80 transition-all">Отмена</button>
             </div>
           </div>
@@ -136,7 +143,7 @@ export default function CalendarPage() {
                   <p className="text-sm font-medium">{event.title}</p>
                   <p className="text-xs text-muted-foreground">{new Date(event.date).toLocaleDateString("ru-RU", { day: "numeric", month: "long" })}</p>
                   {(currentUserId && event.createdById === currentUserId) && (
-                    <DeleteButton onClick={() => handleDelete(event.id)} />
+                    <DeleteButton onClick={() => handleDelete(event.id)} disabled={deletingId === event.id} />
                   )}
                 </div>
               ))}

@@ -18,6 +18,8 @@ export default function PollsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({ question: "", options: ["", ""] });
   const [creating, setCreating] = useState(false);
+  const [votingId, setVotingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     api.polls.list().then((data) => {
@@ -27,6 +29,8 @@ export default function PollsPage() {
   }, []);
 
   const handleVote = async (pollId: string, option: string) => {
+    if (votingId) return;
+    setVotingId(pollId);
     try {
       await api.polls.vote(pollId, option);
       setPolls(polls.map((p) =>
@@ -35,6 +39,7 @@ export default function PollsPage() {
           : p
       ));
     } catch (e) { console.error(e); }
+    setVotingId(null);
   };
 
   const handleCreate = async () => {
@@ -50,11 +55,14 @@ export default function PollsPage() {
   };
 
   const handleDelete = async (id: string) => {
+    if (deletingId) return;
+    setDeletingId(id);
     try {
       await api.polls.delete(id);
       setPolls(polls.filter((p) => p.id !== id));
       toast.success("Опрос удалён");
     } catch { toast.error("Ошибка при удалении"); }
+    setDeletingId(null);
   };
 
   const hasVoted = (poll: any) => poll.votes?.some((v: any) => v.userId === currentUserId);
@@ -108,7 +116,7 @@ export default function PollsPage() {
             return (
               <motion.div key={poll.id} className="glass-card p-6 relative group">
                 {isAuthor && (
-                  <DeleteButton onClick={() => handleDelete(poll.id)} />
+                  <DeleteButton onClick={() => handleDelete(poll.id)} disabled={deletingId === poll.id} />
                 )}
                 <h3 className="font-semibold mb-4">{poll.question}</h3>
                 <div className="space-y-3">
@@ -116,7 +124,7 @@ export default function PollsPage() {
                     const votesForOption = poll.votes?.filter((v: any) => v.option === option).length || 0;
                     const pct = totalVotes > 0 ? Math.round((votesForOption / totalVotes) * 100) : 0;
                     return (
-                      <button key={idx} onClick={() => handleVote(poll.id, option)} disabled={voted} className="relative w-full p-3 rounded-xl bg-accent text-left disabled:opacity-90 transition-all overflow-hidden">
+                      <button key={idx} onClick={() => handleVote(poll.id, option)} disabled={voted || votingId === poll.id} className="relative w-full p-3 rounded-xl bg-accent text-left disabled:opacity-90 transition-all overflow-hidden">
                         <div className="relative z-10 flex items-center justify-between">
                           <span className="text-sm font-medium">{option}</span>
                           <span className="text-xs text-muted-foreground">{votesForOption} ({pct}%)</span>

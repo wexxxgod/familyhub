@@ -29,6 +29,7 @@ export default function ArchivePage() {
   const [form, setForm] = useState({ title: "", description: "", url: "", category: "PHOTO", year: "" });
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [viewImage, setViewImage] = useState<string | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -61,11 +62,14 @@ export default function ArchivePage() {
   }, []);
 
   const handleDelete = async (id: string) => {
+    if (deletingId) return;
+    setDeletingId(id);
     try {
       await api.archive.delete(id);
       setItems(items.filter((item) => item.id !== id));
       toast.success("Элемент удалён из архива");
     } catch { toast.error("Ошибка при удалении"); }
+    setDeletingId(null);
   };
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -161,7 +165,7 @@ export default function ArchivePage() {
           {filtered.map((item, i) => (
             <motion.div key={item.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="glass-card p-5 relative group">
               {(currentUserId && item.uploadedById === currentUserId) && (
-                <DeleteButton onClick={() => handleDelete(item.id)} />
+                <DeleteButton onClick={() => handleDelete(item.id)} disabled={deletingId === item.id} />
               )}
               {item.url && (
                 <div className="w-full rounded-xl overflow-hidden mb-3 cursor-pointer" onClick={() => setViewImage(item.url)}>

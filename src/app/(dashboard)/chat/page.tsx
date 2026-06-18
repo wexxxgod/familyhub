@@ -13,6 +13,7 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<any[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const fetchMessages = useCallback(async () => {
@@ -38,12 +39,14 @@ export default function ChatPage() {
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
   const handleSend = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || sending) return;
+    setSending(true);
     try {
       const msg = await api.chat.send({ content: input.trim() });
       setMessages((prev) => [...prev, { ...msg, sender: { id: currentUserId, name: user?.name } }]);
       setInput("");
     } catch { toast.error("Ошибка при отправке"); }
+    setSending(false);
   };
 
   const isFromMe = (msg: any) => msg.senderId === currentUserId;
@@ -121,7 +124,7 @@ export default function ChatPage() {
             />
             <button
               onClick={handleSend}
-              disabled={!input.trim()}
+              disabled={!input.trim() || sending}
               aria-label="Отправить"
               className="p-3 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white disabled:opacity-50 transition-all shadow-lg shadow-amber-200/30 hover:shadow-amber-200/50"
             >

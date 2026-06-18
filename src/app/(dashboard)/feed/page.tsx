@@ -22,6 +22,8 @@ export default function FeedPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [likingId, setLikingId] = useState<string | null>(null);
 
   const mapPost = useCallback((p: any) => ({
     ...p,
@@ -93,6 +95,8 @@ export default function FeedPage() {
   };
 
   const handleDeletePost = async (id: string) => {
+    if (deletingId) return;
+    setDeletingId(id);
     try {
       await api.posts.delete(id);
       setPosts((prev) => prev.filter((p) => p.id !== id));
@@ -100,6 +104,7 @@ export default function FeedPage() {
     } catch {
       toast.error("Ошибка при удалении");
     }
+    setDeletingId(null);
   };
 
   const updatePostInState = (postId: string, updater: (p: any) => any) => {
@@ -107,12 +112,15 @@ export default function FeedPage() {
   };
 
   const handleToggleLike = async (postId: string) => {
+    if (likingId) return;
+    setLikingId(postId);
     try {
       const { liked } = await api.likes.toggle(postId);
       updatePostInState(postId, (p) => ({ ...p, isLiked: liked, likes: liked ? p.likes + 1 : p.likes - 1 }));
     } catch (e) {
       console.error("Failed to toggle like:", e);
     }
+    setLikingId(null);
   };
 
   const handleComment = async (postId: string, content: string) => {
@@ -186,6 +194,8 @@ export default function FeedPage() {
                 onDelete={handleDeletePost}
                 onEdit={handleEditPost}
                 onDeleteComment={(commentId) => handleDeleteComment(post.id, commentId)}
+                isLiking={likingId === post.id}
+                isDeleting={deletingId === post.id}
               />
             </motion.div>
           ))}

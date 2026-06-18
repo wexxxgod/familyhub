@@ -30,6 +30,7 @@ export default function PetsPage() {
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [form, setForm] = useState({
     name: "",
     species: "Собака",
@@ -60,11 +61,14 @@ export default function PetsPage() {
   };
 
   const handleDelete = async (id: string) => {
+    if (deletingId) return;
+    setDeletingId(id);
     try {
       await api.pets.delete(id);
       setPets(pets.filter((p) => p.id !== id));
       toast.success("Питомец удалён");
     } catch { toast.error("Ошибка при удалении"); }
+    setDeletingId(null);
   };
 
   if (loading) {
@@ -189,7 +193,7 @@ export default function PetsPage() {
               className="glass-card overflow-hidden relative group"
             >
               {user?.id === pet.ownerId && (
-                <DeleteButton onClick={() => handleDelete(pet.id)} />
+                <DeleteButton onClick={() => handleDelete(pet.id)} disabled={deletingId === pet.id} />
               )}
               <div className="h-40 bg-gradient-to-br from-amber-500/10 to-orange-500/10 flex items-center justify-center overflow-hidden">
                 {pet.photo ? (

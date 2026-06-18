@@ -9,6 +9,7 @@ export default function FamilyTreePage() {
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({ firstName: "", lastName: "", middleName: "", dateOfBirth: "", parentId: "" });
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     api.familyTree.list().then((data) => {
@@ -18,13 +19,15 @@ export default function FamilyTreePage() {
   }, []);
 
   const handleAdd = async () => {
-    if (!form.firstName.trim() || !form.lastName.trim()) return;
+    if (!form.firstName.trim() || !form.lastName.trim() || submitting) return;
+    setSubmitting(true);
     try {
       const member = await api.familyTree.create(form);
       setMembers([...members, member]);
       setForm({ firstName: "", lastName: "", middleName: "", dateOfBirth: "", parentId: "" });
       setShowAdd(false);
     } catch (e) { console.error(e); }
+    setSubmitting(false);
   };
 
   const rootNodes = members.filter((m: any) => !m.parentId);
@@ -93,7 +96,7 @@ export default function FamilyTreePage() {
               ))}
             </select>
           )}
-          <button onClick={handleAdd} className="mt-4 px-6 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-all">Сохранить</button>
+          <button onClick={handleAdd} disabled={submitting || !form.firstName.trim() || !form.lastName.trim()} className="mt-4 px-6 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-all disabled:opacity-50">Сохранить</button>
         </motion.div>
       )}
 

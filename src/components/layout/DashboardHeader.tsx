@@ -32,6 +32,7 @@ export function DashboardHeader() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any>(null);
+  const [loggingOut, setLoggingOut] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
 
   const notifications = useStore((s) => s.notifications);
@@ -52,7 +53,21 @@ export function DashboardHeader() {
     return () => clearTimeout(t);
   }, [searchQuery]);
 
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setMenuOpen(false);
+        setNotifOpen(false);
+        setSearchOpen(false);
+        setDrawerOpen(false);
+      }
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, []);
+
   const handleLogout = async () => {
+    setLoggingOut(true);
     try { await fetch("/api/auth/logout", { method: "POST" }); } catch {}
     window.location.href = "/";
   };
@@ -172,7 +187,7 @@ export function DashboardHeader() {
                     <p className="text-xs text-muted-foreground">{sessionUser?.email}</p>
                   </div>
                   <Link href="/member" className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm hover:bg-white/40 dark:hover:bg-white/5 transition-colors" onClick={() => setMenuOpen(false)}>👤 Мой профиль</Link>
-                  <button onClick={handleLogout} className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm text-red-500 hover:bg-red-500/10 transition-colors w-full">🚪 Выйти</button>
+                  <button onClick={handleLogout} disabled={loggingOut} className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm text-red-500 hover:bg-red-500/10 transition-colors w-full disabled:opacity-30 disabled:cursor-not-allowed">🚪 {loggingOut ? "Выход..." : "Выйти"}</button>
                 </div>
               </>
             )}

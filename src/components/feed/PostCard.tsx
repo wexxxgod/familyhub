@@ -15,9 +15,11 @@ interface PostCardProps {
   onDelete?: (id: string) => void;
   onDeleteComment?: (commentId: string) => void;
   onEdit?: (id: string, data: { content: string; tags?: string[] }) => Promise<void>;
+  isLiking?: boolean;
+  isDeleting?: boolean;
 }
 
-export function PostCard({ post, currentUserId, currentUserRole, onToggleLike, onComment, onDelete, onDeleteComment, onEdit }: PostCardProps) {
+export function PostCard({ post, currentUserId, currentUserRole, onToggleLike, onComment, onDelete, onDeleteComment, onEdit, isLiking, isDeleting }: PostCardProps) {
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [sending, setSending] = useState(false);
@@ -84,8 +86,12 @@ export function PostCard({ post, currentUserId, currentUserRole, onToggleLike, o
               </button>
             )}
             {canDelete && onDelete && (
-              <button onClick={() => onDelete(post.id)} className="p-2 rounded-full text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-colors" aria-label="Удалить">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+              <button onClick={() => onDelete(post.id)} disabled={isDeleting} className="p-2 rounded-full text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed" aria-label="Удалить">
+                {isDeleting ? (
+                  <div className="w-3.5 h-3.5 rounded-full border-2 border-red-500 border-t-transparent animate-spin" />
+                ) : (
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                )}
               </button>
             )}
           </div>
@@ -123,10 +129,11 @@ export function PostCard({ post, currentUserId, currentUserRole, onToggleLike, o
 
         <div className="flex items-center gap-1 px-5 py-3 border-t border-border/40">
           <button
-            onClick={() => { setLikeAnim(true); setTimeout(() => setLikeAnim(false), 300); onToggleLike(); }}
+            onClick={() => { if (isLiking) return; setLikeAnim(true); setTimeout(() => setLikeAnim(false), 300); onToggleLike(); }}
+            disabled={isLiking}
             aria-label="Лайк"
             aria-pressed={post.isLiked}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all duration-200 ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all duration-200 disabled:opacity-50 ${
               post.isLiked
                 ? "text-red-500 bg-red-500/10"
                 : "text-muted-foreground hover:text-red-500 hover:bg-red-500/5"
