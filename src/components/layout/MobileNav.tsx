@@ -6,51 +6,15 @@ import { cn } from "@/lib/utils";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 const MOBILE_ITEMS = [
-  { href: "/feed", icon: (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="3" width="18" height="18" rx="2" /><line x1="9" y1="9" x2="15" y2="15" /><line x1="15" y1="9" x2="9" y2="15" />
-    </svg>
-  ), label: "Лента" },
-  { href: "/chat", icon: (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-    </svg>
-  ), label: "Чат" },
-  { href: "/calendar", icon: (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
-    </svg>
-  ), label: "Календарь" },
-  { href: "/family-tree", icon: (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
-    </svg>
-  ), label: "Древо" },
-  { href: "/memories", icon: (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" />
-    </svg>
-  ), label: "Воспоминания" },
-  { href: "/polls", icon: (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" />
-    </svg>
-  ), label: "Опросы" },
-  { href: "/archive", icon: (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-    </svg>
-  ), label: "Архив" },
-  { href: "/pets", icon: (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20 7c-1 0-2 .5-2 2 0 1.5 1 2 1 4 0 2-1 3-3 3" /><path d="M4 7c1 0 2 .5 2 2 0 1.5-1 2-1 4 0 2 1 3 3 3" /><path d="M12 17c-2 0-4-1-4-3 0-3 2-5 4-5s4 2 4 5c0 2-2 3-4 3z" />
-    </svg>
-  ), label: "Питомцы" },
-  { href: "/member", icon: (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
-    </svg>
-  ), label: "Профиль" },
+  { href: "/feed", icon: "📝", label: "Лента" },
+  { href: "/chat", icon: "💬", label: "Чат" },
+  { href: "/calendar", icon: "📅", label: "Календарь" },
+  { href: "/family-tree", icon: "🌳", label: "Древо" },
+  { href: "/memories", icon: "✨", label: "Воспоминания" },
+  { href: "/polls", icon: "📊", label: "Опросы" },
+  { href: "/archive", icon: "📦", label: "Архив" },
+  { href: "/pets", icon: "🐾", label: "Питомцы" },
+  { href: "/member", icon: "👤", label: "Профиль" },
 ];
 
 export function MobileNav() {
@@ -58,16 +22,12 @@ export function MobileNav() {
   const { user } = useCurrentUser();
 
   const items = user?.role === "creator"
-    ? [...MOBILE_ITEMS, { href: "/admin", icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-      </svg>
-    ), label: "Админ" }]
+    ? [...MOBILE_ITEMS, { href: "/admin", icon: "⚙️", label: "Админ" }]
     : MOBILE_ITEMS;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 lg:hidden border-t border-border bg-background/95 backdrop-blur-xl z-40">
-      <div className="flex items-center overflow-x-auto flex-nowrap py-2 px-2 gap-1 scrollbar-hide">
+    <nav className="fixed bottom-0 left-0 right-0 lg:hidden glass border-x-0 border-b-0 rounded-none z-40">
+      <div className="flex items-center overflow-x-auto flex-nowrap py-2 px-2 gap-0.5 scrollbar-hide">
         {items.map((item) => {
           const isActive = pathname === item.href;
           return (
@@ -76,11 +36,13 @@ export function MobileNav() {
               href={item.href}
               aria-current={isActive ? "page" : undefined}
               className={cn(
-                "flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors min-w-[56px]",
-                isActive ? "text-primary" : "text-muted-foreground"
+                "flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-2xl transition-all duration-200 min-w-[56px]",
+                isActive
+                  ? "bg-gradient-to-b from-amber-500/15 to-orange-500/10 text-primary shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
-              {item.icon}
+              <span className="text-lg">{item.icon}</span>
               <span className="text-[10px] font-medium whitespace-nowrap">{item.label}</span>
             </Link>
           );

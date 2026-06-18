@@ -76,25 +76,26 @@ async function compressImage(file: File, maxWidth: number, quality: number): Pro
 }
 
   return (
-    <div className="glass-card overflow-hidden">
+    <div className="bento-card gradient-border">
       {!isExpanded ? (
         <button
           onClick={() => setIsExpanded(true)}
-          className="w-full flex items-center gap-3 p-4 text-left"
+          className="w-full flex items-center gap-3 p-5 text-left"
         >
-          <GradientAvatar name={user?.name} image={user?.image} size="md" />
+          <GradientAvatar name={user?.name} image={user?.image} size="md" className="ring-2 ring-amber-200/50 dark:ring-amber-500/20" />
           <span className="text-muted-foreground">Поделитесь семейной новостью...</span>
+          <span className="ml-auto text-lg">📝</span>
         </button>
       ) : (
         <motion.div
           initial={{ height: 0 }}
           animate={{ height: "auto" }}
-          className="p-4"
+          className="p-5"
         >
           <div className="flex items-center gap-3 mb-4">
-            <GradientAvatar name={user?.name} image={user?.image} size="md" />
+            <GradientAvatar name={user?.name} image={user?.image} size="md" className="ring-2 ring-amber-200/50 dark:ring-amber-500/20" />
             <div>
-              <p className="font-medium text-sm">Новая публикация</p>
+              <p className="font-medium text-sm">✍️ Новая публикация</p>
               <p className="text-xs text-muted-foreground">Доступно только семье</p>
             </div>
           </div>
@@ -104,29 +105,29 @@ async function compressImage(file: File, maxWidth: number, quality: number): Pro
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="Что нового в вашей семье?"
-            className="w-full min-h-[100px] bg-accent rounded-xl p-4 outline-none resize-none text-sm"
+            className="w-full min-h-[120px] bg-white/50 dark:bg-white/5 rounded-2xl p-4 outline-none resize-none text-sm border border-border/30 focus:border-amber-300/50 transition-all"
             autoFocus
           />
 
           {image && (
             <div className="relative mt-3">
-              <img src={image} alt="preview" className="w-full rounded-xl" />
+              <img src={image} alt="preview" className="w-full rounded-2xl shadow-md" />
               <button
                 onClick={() => setImage(null)}
-                className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/50 text-white hover:bg-black/70 transition-colors"
+                className="absolute top-2 right-2 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-all backdrop-blur-sm"
                 aria-label="Удалить фото"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
               </button>
             </div>
           )}
 
           <div className="flex items-center justify-between mt-4">
-            <div className="flex gap-2">
+            <div className="flex gap-1">
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
-                className="p-2 rounded-lg hover:bg-accent text-muted-foreground transition-colors disabled:opacity-50"
+                className="p-2.5 rounded-full hover:bg-white/40 dark:hover:bg-white/5 text-muted-foreground transition-all disabled:opacity-50"
                 aria-label="Добавить фото"
               >
                 {uploading ? (
@@ -148,14 +149,14 @@ async function compressImage(file: File, maxWidth: number, quality: number): Pro
             <div className="flex gap-2">
               <button
                 onClick={() => { setIsExpanded(false); setContent(""); setImage(""); }}
-                className="px-4 py-2 rounded-xl text-sm hover:bg-accent transition-colors"
+                className="btn-ghost px-4 py-2 text-sm"
               >
                 Отмена
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={!content.trim() || uploading}
-                className="px-5 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-all disabled:opacity-50"
+                className="btn-primary px-5 py-2 text-sm disabled:opacity-50"
               >
                 Опубликовать
               </button>

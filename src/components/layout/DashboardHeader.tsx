@@ -11,15 +11,15 @@ import { useStore } from "@/store";
 import { api } from "@/lib/api";
 
 const DRAWER_ITEMS = [
-  { label: "Лента", href: "/feed", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><line x1="9" y1="9" x2="15" y2="15" /><line x1="15" y1="9" x2="9" y2="15" /></svg> },
-  { label: "Архив", href: "/archive", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></svg> },
-  { label: "Семейное древо", href: "/family-tree", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" /></svg> },
-  { label: "Календарь", href: "/calendar", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg> },
-  { label: "Чат", href: "/chat", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg> },
-  { label: "Воспоминания", href: "/memories", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg> },
-  { label: "Голосования", href: "/polls", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg> },
-  { label: "Питомцы", href: "/pets", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 7c-1 0-2 .5-2 2 0 1.5 1 2 1 4 0 2-1 3-3 3" /><path d="M4 7c1 0 2 .5 2 2 0 1.5-1 2-1 4 0 2 1 3 3 3" /><path d="M12 17c-2 0-4-1-4-3 0-3 2-5 4-5s4 2 4 5c0 2-2 3-4 3z" /></svg> },
-  { label: "Профиль", href: "/member", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg> },
+  { label: "Лента", href: "/feed", icon: "📝" },
+  { label: "Архив", href: "/archive", icon: "📦" },
+  { label: "Семейное древо", href: "/family-tree", icon: "🌳" },
+  { label: "Календарь", href: "/calendar", icon: "📅" },
+  { label: "Чат", href: "/chat", icon: "💬" },
+  { label: "Воспоминания", href: "/memories", icon: "✨" },
+  { label: "Голосования", href: "/polls", icon: "📊" },
+  { label: "Питомцы", href: "/pets", icon: "🐾" },
+  { label: "Профиль", href: "/member", icon: "👤" },
 ];
 
 export function DashboardHeader() {
@@ -58,17 +58,17 @@ export function DashboardHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-30 glass border-x-0 border-t-0 rounded-none">
       <div className="flex items-center justify-between h-16 px-4 lg:px-6">
         <div className="flex items-center gap-4 lg:hidden">
-          <button aria-label="Открыть меню" onClick={() => setDrawerOpen(true)} className="p-2 rounded-xl hover:bg-accent">
+          <button aria-label="Открыть меню" onClick={() => setDrawerOpen(true)} className="p-2.5 rounded-full hover:bg-white/40 dark:hover:bg-white/5 transition-all">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="18" x2="21" y2="18" /></svg>
           </button>
           <Link href="/feed" className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-md bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
-              <span className="text-white font-bold text-xs">F</span>
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-md">
+              <span className="text-white font-bold text-xs">🏠</span>
             </div>
-            <span className="font-semibold">FamilyHub</span>
+            <span className="font-semibold text-gradient font-['Fredoka']">FamilyHub</span>
           </Link>
         </div>
 
@@ -76,14 +76,14 @@ export function DashboardHeader() {
 
         <div className="relative max-w-md w-full mx-4">
           <div className="hidden sm:block">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
+            <svg className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
             <input
               type="search"
               aria-label="Поиск"
-              placeholder="Поиск по сайту..."
+              placeholder="Поиск..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 rounded-xl bg-accent border-none outline-none text-sm focus:ring-1 focus:ring-ring transition-all"
+              className="w-full pl-10 pr-4 py-2.5 rounded-full bg-white/60 dark:bg-white/5 border border-border/30 outline-none text-sm focus:border-amber-300/50 transition-all"
             />
           </div>
           {searchResults && searchQuery.trim() && (
@@ -108,15 +108,15 @@ export function DashboardHeader() {
           )}
         </div>
 
-        <div className="flex items-center gap-1">
-          <button onClick={() => setSearchOpen(!searchOpen)} className="sm:hidden p-2 rounded-xl hover:bg-accent">
+        <div className="flex items-center gap-0.5">
+          <button onClick={() => setSearchOpen(!searchOpen)} className="sm:hidden p-2.5 rounded-full hover:bg-white/40 dark:hover:bg-white/5 transition-all">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
           </button>
 
           <ThemeToggle />
 
           <div className="relative">
-            <button aria-label="Уведомления" onClick={() => setNotifOpen(!notifOpen)} className="relative p-2 rounded-xl hover:bg-accent transition-colors">
+            <button aria-label="Уведомления" onClick={() => setNotifOpen(!notifOpen)} className="relative p-2.5 rounded-full hover:bg-white/40 dark:hover:bg-white/5 transition-all">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></svg>
               {unreadCount > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
@@ -128,24 +128,28 @@ export function DashboardHeader() {
             {notifOpen && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setNotifOpen(false)} />
-                <div className="absolute right-0 top-full mt-2 w-80 glass-card p-2 z-50 max-h-96 overflow-y-auto">
-                  <div className="flex items-center justify-between px-3 py-2 border-b border-border mb-2">
-                    <p className="font-semibold text-sm">Уведомления</p>
+                <div className="absolute right-0 top-full mt-3 w-80 glass-card p-3 z-50 max-h-96 overflow-y-auto shadow-xl">
+                  <div className="flex items-center justify-between px-3 pb-2 border-b border-border/40 mb-2">
+                    <p className="font-semibold text-sm">🔔 Уведомления</p>
                     {unreadCount > 0 && (
-                      <button onClick={() => { markAllRead(); }} className="text-xs text-primary hover:underline">Прочитать все</button>
+                      <button onClick={() => { markAllRead(); }} className="text-xs text-primary font-medium hover:opacity-80">Прочитать все</button>
                     )}
                   </div>
                   {notifications.length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center py-6">Нет уведомлений</p>
+                    <p className="text-sm text-muted-foreground text-center py-8">Нет уведомлений ✨</p>
                   ) : (
                     notifications.map((n) => (
                       <button
                         key={n.id}
                         onClick={() => { if (!n.read) markNotificationRead(n.id); }}
-                        className={`w-full text-left px-3 py-3 rounded-lg text-sm transition-colors ${!n.read ? "bg-accent/50" : "hover:bg-accent/30"}`}
+                        className={`w-full text-left px-4 py-3 rounded-2xl text-sm transition-all ${
+                          !n.read
+                            ? "bg-gradient-to-r from-amber-500/8 to-orange-500/5"
+                            : "hover:bg-white/40 dark:hover:bg-white/5"
+                        }`}
                       >
                         <p className="font-medium">{n.title}</p>
-                        <p className="text-xs text-muted-foreground">{n.message}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{n.message}</p>
                       </button>
                     ))
                   )}
@@ -155,20 +159,20 @@ export function DashboardHeader() {
           </div>
 
           <div className="relative">
-            <button aria-label="Меню пользователя" onClick={() => setMenuOpen(!menuOpen)} className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-accent transition-colors">
+            <button aria-label="Меню пользователя" onClick={() => setMenuOpen(!menuOpen)} className="flex items-center gap-2 p-1 rounded-full hover:bg-white/40 dark:hover:bg-white/5 transition-all ring-1 ring-border/30">
               <GradientAvatar name={sessionUser?.name} image={sessionUser?.image} size="md" className="!w-8 !h-8" />
             </button>
 
             {menuOpen && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
-                <div className="absolute right-0 top-full mt-2 w-56 glass-card p-2 z-50">
-                  <div className="px-3 py-2 border-b border-border mb-2">
+                <div className="absolute right-0 top-full mt-3 w-56 glass-card p-2 z-50 shadow-xl">
+                  <div className="px-4 py-3 border-b border-border/40 mb-1">
                     <p className="font-medium text-sm">{sessionUser?.name}</p>
                     <p className="text-xs text-muted-foreground">{sessionUser?.email}</p>
                   </div>
-                  <Link href="/member" className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-accent transition-colors" onClick={() => setMenuOpen(false)}>Мой профиль</Link>
-                  <button onClick={handleLogout} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-red-500 hover:bg-red-500/10 transition-colors w-full">Выйти</button>
+                  <Link href="/member" className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm hover:bg-white/40 dark:hover:bg-white/5 transition-colors" onClick={() => setMenuOpen(false)}>👤 Мой профиль</Link>
+                  <button onClick={handleLogout} className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm text-red-500 hover:bg-red-500/10 transition-colors w-full">🚪 Выйти</button>
                 </div>
               </>
             )}
@@ -179,15 +183,15 @@ export function DashboardHeader() {
       {drawerOpen && (
         <>
           <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden" onClick={() => setDrawerOpen(false)} />
-          <div className="fixed top-0 left-0 bottom-0 w-[280px] z-50 bg-background border-r border-border shadow-2xl lg:hidden animate-drawer-in overflow-y-auto">
-            <div className="p-5 border-b border-border flex items-center justify-between">
-              <Link href="/feed" className="flex items-center gap-2" onClick={() => setDrawerOpen(false)}>
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">F</span>
+          <div className="fixed top-0 left-0 bottom-0 w-[280px] z-50 glass-sidebar shadow-2xl lg:hidden animate-drawer-in overflow-y-auto">
+            <div className="p-5 border-b border-border/40 flex items-center justify-between">
+              <Link href="/feed" className="flex items-center gap-3" onClick={() => setDrawerOpen(false)}>
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-lg">
+                  <span className="text-white font-bold text-base">🏠</span>
                 </div>
-                <span className="font-semibold text-lg">FamilyHub</span>
+                <span className="font-semibold text-lg text-gradient font-['Fredoka']">FamilyHub</span>
               </Link>
-              <button aria-label="Закрыть меню" onClick={() => setDrawerOpen(false)} className="p-2 rounded-xl hover:bg-accent">
+              <button aria-label="Закрыть меню" onClick={() => setDrawerOpen(false)} className="p-2.5 rounded-full hover:bg-white/40 dark:hover:bg-white/5 transition-all">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
               </button>
             </div>
@@ -201,12 +205,12 @@ export function DashboardHeader() {
                     aria-current={isActive ? "page" : undefined}
                     onClick={() => setDrawerOpen(false)}
                     className={cn(
-                      "flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all min-h-[44px]",
-                      isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                      "nav-link",
+                      isActive ? "nav-link-active" : "nav-link-inactive"
                     )}
                   >
-                    <span className={cn(isActive ? "text-primary" : "text-muted-foreground", "shrink-0")}>{item.icon}</span>
-                    {item.label}
+                    <span className="shrink-0">{item.icon}</span>
+                    <span className={cn(isActive && "font-semibold")}>{item.label}</span>
                   </Link>
                 );
               })}
@@ -216,18 +220,18 @@ export function DashboardHeader() {
                   aria-current={pathname === "/admin" ? "page" : undefined}
                   onClick={() => setDrawerOpen(false)}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all min-h-[44px]",
-                    pathname === "/admin" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                    "nav-link mt-3 pt-3 border-t border-border/40",
+                    pathname === "/admin" ? "nav-link-active" : "nav-link-inactive"
                   )}
                 >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
-                  Администрирование
+                  <span className="shrink-0">⚙️</span>
+                  <span className={cn(pathname === "/admin" && "font-semibold")}>Администрирование</span>
                 </Link>
               )}
             </nav>
-            <div className="p-3 border-t border-border mt-4">
-              <div className="flex items-center justify-between px-3 py-2">
-                <span className="text-xs text-muted-foreground">Сменить тему</span>
+            <div className="p-4 border-t border-border/40 mt-4">
+              <div className="flex items-center justify-between px-4 py-2.5 rounded-full bg-white/30 dark:bg-white/5">
+                <span className="text-xs text-muted-foreground font-medium">🌙 Тема</span>
                 <ThemeToggle />
               </div>
             </div>
