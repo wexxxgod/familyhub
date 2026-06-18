@@ -3,15 +3,17 @@ import type { NextRequest } from "next/server";
 
 export default function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
+  const token = req.cookies.get("familyhub.session");
+  const isLoggedIn = !!token;
 
   const publicPaths = ["/", "/login", "/register"];
-  if (publicPaths.some((p) => path === p || path.startsWith(p + "?"))) {
-    return NextResponse.next();
+  const isPublic = publicPaths.some((p) => path === p || path.startsWith(p + "?"));
+
+  if (isLoggedIn && isPublic) {
+    return NextResponse.redirect(new URL("/feed", req.url));
   }
 
-  const token = req.cookies.get("familyhub.session");
-
-  if (!token) {
+  if (!isPublic && !isLoggedIn) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
