@@ -17,11 +17,13 @@ export function CreatePost({ onSubmit }: CreatePostProps) {
   const [content, setContent] = useState("");
   const [image, setImage] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSubmit = async () => {
-    if (!content.trim() || uploading) return;
+    if ((!content.trim() && !image) || uploading || submitting) return;
+    setSubmitting(true);
     try {
       await onSubmit(content.trim(), image || undefined);
       setContent("");
@@ -29,6 +31,8 @@ export function CreatePost({ onSubmit }: CreatePostProps) {
       setIsExpanded(false);
     } catch {
       toast.error("Ошибка при публикации");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -155,10 +159,10 @@ async function compressImage(file: File, maxWidth: number, quality: number): Pro
               </button>
               <button
                 onClick={handleSubmit}
-                disabled={!content.trim() || uploading}
+                disabled={(!content.trim() && !image) || uploading || submitting}
                 className="btn-primary px-5 py-2 text-sm disabled:opacity-50"
               >
-                Опубликовать
+                {submitting ? "Публикация..." : "Опубликовать"}
               </button>
             </div>
           </div>
