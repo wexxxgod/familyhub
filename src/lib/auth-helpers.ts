@@ -26,7 +26,6 @@ export async function createSessionToken(user: {
     role: user.role,
     email: user.email,
     name: user.name,
-    picture: user.image,
     familyId: user.familyId,
     sub: user.id,
   })
