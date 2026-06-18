@@ -39,7 +39,11 @@ function getSecretKey(): Uint8Array | null {
   return new Uint8Array(createHash("sha256").update(secret).digest());
 }
 
-const COOKIE_MAX_AGE = 30 * 24 * 60 * 60;
+const COOKIE_MAX_AGE = 365 * 24 * 60 * 60;
+
+function getCookieExpires(): Date {
+  return new Date(Date.now() + COOKIE_MAX_AGE * 1000);
+}
 
 export async function createSessionToken(user: {
   id: string; role: string; email: string; name: string | null; image: string | null; familyId: string | null;
@@ -68,21 +72,13 @@ export function setSessionCookie(response: NextResponse, token: string): void {
     sameSite: "lax",
     path: "/",
     secure: process.env.NODE_ENV === "production",
+    expires: getCookieExpires(),
     maxAge: COOKIE_MAX_AGE,
   });
-  const isSecure = process.env.NODE_ENV === "production";
-  response.headers.set(
-    "Set-Cookie",
-    `${COOKIE_NAME}=${token}; HttpOnly; SameSite=Lax; Path=/; ${isSecure ? "Secure; " : ""}Max-Age=${COOKIE_MAX_AGE}`
-  );
 }
 
 export function clearSessionCookie(response: NextResponse): void {
-  response.cookies.set(COOKIE_NAME, "", { httpOnly: true, path: "/", maxAge: 0 });
-  response.headers.set(
-    "Set-Cookie",
-    `${COOKIE_NAME}=; HttpOnly; Path=/; Max-Age=0`
-  );
+  response.cookies.set(COOKIE_NAME, "", { httpOnly: true, path: "/", expires: new Date(0), maxAge: 0 });
 }
 
 function getTokenFromHeaders(): string | null {
