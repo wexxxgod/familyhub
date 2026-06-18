@@ -65,7 +65,7 @@ export function PostCard({ post, currentUserId, currentUserRole, onToggleLike, o
 
         {post.image && (
           <div className="px-4 pb-0 cursor-pointer" onClick={() => setViewImage(post.image)}>
-            <img src={post.image} alt="" className="w-full rounded-xl object-cover max-h-96 transition-opacity hover:opacity-90" loading="lazy" />
+            <img src={post.image} alt="" className="w-full rounded-xl transition-opacity hover:opacity-90" loading="lazy" />
           </div>
         )}
 

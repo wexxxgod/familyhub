@@ -141,8 +141,8 @@ export default function ArchivePage() {
                 </button>
               )}
               {item.url && (
-                <div className="w-full h-32 rounded-xl overflow-hidden mb-3">
-                  <img src={item.url} alt={item.title} className="w-full h-full object-cover" />
+                <div className="w-full rounded-xl overflow-hidden mb-3">
+                  <img src={item.url} alt={item.title} className="w-full" />
                 </div>
               )}
               {!item.url && (

@@ -116,7 +116,7 @@ async function compressImage(file: File, maxWidth: number, quality: number): Pro
 
           {image && (
             <div className="relative mt-3">
-              <img src={image} alt="preview" className="w-full h-48 object-cover rounded-xl" />
+              <img src={image} alt="preview" className="w-full rounded-xl" />
               <button
                 onClick={() => setImage(null)}
                 className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/50 text-white hover:bg-black/70 transition-colors"
