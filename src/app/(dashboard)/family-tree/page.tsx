@@ -66,7 +66,7 @@ export default function FamilyTreePage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8 flex items-start justify-between">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8 flex flex-col sm:flex-row items-start justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold mb-1">Семейное древо</h1>
           <p className="text-muted-foreground">Постройте интерактивное дерево вашей семьи</p>

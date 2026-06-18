@@ -17,11 +17,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <Sidebar />
         <div className="lg:pl-[240px]">
           <DashboardHeader />
-          <main className="pb-20 lg:pb-8">
+          <main className="pb-24 lg:pb-8">
             {children}
           </main>
         </div>
         <MobileNav />
+        <div className="lg:hidden h-[env(safe-area-inset-bottom,0px)]" />
       </FamilyGuard>
     </div>
   );

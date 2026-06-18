@@ -200,12 +200,12 @@ export default function MemberPage() {
       </motion.div>
 
       {familyInfo?.family && (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card p-5 mb-6 flex items-center justify-between">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card p-5 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
             <p className="text-xs text-muted-foreground mb-1">Семья</p>
             <p className="font-semibold text-lg">{familyInfo.family.name}</p>
           </div>
-          <div className="text-right">
+          <div className="text-left sm:text-right">
             <p className="text-xs text-muted-foreground mb-1">Код приглашения</p>
             <button onClick={copyCode} className="font-mono font-bold tracking-widest text-lg text-primary hover:opacity-80 transition-all">{familyInfo.family.inviteCode}</button>
           </div>
@@ -350,7 +350,7 @@ export default function MemberPage() {
 
       {familyInfo?.family && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-card p-5 mt-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
               <p className="text-xs text-muted-foreground mb-1">Выход из семьи</p>
               <p className="text-sm">Вы можете покинуть семью. Это удалит ваши уведомления и чаты.</p>
@@ -358,7 +358,7 @@ export default function MemberPage() {
             <button
               onClick={handleLeaveFamily}
               disabled={leavingFamily}
-              className="px-4 py-2 rounded-xl bg-red-500/10 text-red-500 font-semibold text-sm hover:bg-red-500/20 transition-all disabled:opacity-50"
+              className="px-4 py-2 rounded-xl bg-red-500/10 text-red-500 font-semibold text-sm hover:bg-red-500/20 transition-all disabled:opacity-50 shrink-0"
             >
               {leavingFamily ? (
                 <div className="w-4 h-4 rounded-full border-2 border-red-500 border-t-transparent animate-spin mx-auto" />

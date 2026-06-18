@@ -229,6 +229,25 @@
   animation: spin-slow 2s linear infinite;
 }
 
+/* Safe area for notched phones */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+/* Drawer animation */
+@keyframes drawer-in {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+.animate-drawer-in {
+  animation: drawer-in 0.25s ease-out;
+}
+
 /* Button click feedback */
 .btn-press {
   transition: transform 0.1s ease;

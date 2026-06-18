@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 const MOBILE_ITEMS = [
   { href: "/feed", icon: (
@@ -54,11 +55,20 @@ const MOBILE_ITEMS = [
 
 export function MobileNav() {
   const pathname = usePathname();
+  const { user } = useCurrentUser();
+
+  const items = user?.role === "creator"
+    ? [...MOBILE_ITEMS, { href: "/admin", icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      </svg>
+    ), label: "Админ" }]
+    : MOBILE_ITEMS;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 lg:hidden border-t border-border bg-background/95 backdrop-blur-xl z-40">
       <div className="flex items-center overflow-x-auto flex-nowrap py-2 px-2 gap-1 scrollbar-hide">
-        {MOBILE_ITEMS.map((item) => {
+        {items.map((item) => {
           const isActive = pathname === item.href;
           return (
             <Link
@@ -66,12 +76,12 @@ export function MobileNav() {
               href={item.href}
               aria-current={isActive ? "page" : undefined}
               className={cn(
-                "flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors",
+                "flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors min-w-[56px]",
                 isActive ? "text-primary" : "text-muted-foreground"
               )}
             >
               {item.icon}
-              <span className="text-[10px] font-medium">{item.label}</span>
+              <span className="text-[10px] font-medium whitespace-nowrap">{item.label}</span>
             </Link>
           );
         })}
