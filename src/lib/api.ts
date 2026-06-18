@@ -5,6 +5,10 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
     headers: { "Content-Type": "application/json", ...options?.headers },
     ...options,
   });
+  if (res.status === 401 && typeof window !== "undefined") {
+    window.location.href = "/login";
+    throw new Error("Unauthorized");
+  }
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: "Request failed" }));
     throw new Error(err.error || `HTTP ${res.status}`);
@@ -14,7 +18,8 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
 
 export const api = {
   posts: {
-    list: () => request<any[]>("/api/posts"),
+    list: (params?: { cursor?: string; limit?: number }) =>
+      request<{ posts: any[]; nextCursor: string | null }>(`/api/posts?${new URLSearchParams(params as any).toString()}`),
     create: (data: any) => request<any>("/api/posts", { method: "POST", body: JSON.stringify(data) }),
     update: (id: string, data: any) => request<any>("/api/posts", { method: "PATCH", body: JSON.stringify({ id, ...data }) }),
     delete: (id: string) => request<any>("/api/posts", { method: "DELETE", body: JSON.stringify({ id }) }),

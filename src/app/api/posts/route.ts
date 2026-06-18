@@ -11,7 +11,13 @@ export async function GET(req: NextRequest) {
       return NextResponse.json([]);
     }
 
+    const url = new URL(req.url);
+    const cursor = url.searchParams.get("cursor");
+    const limit = Math.min(parseInt(url.searchParams.get("limit") || "10", 10), 50);
+
     const posts = await prisma.post.findMany({
+      take: limit + 1,
+      ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
       where: {
         author: { familyId: user.familyId },
       },
@@ -23,7 +29,10 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: "desc" },
     });
 
-    return NextResponse.json(posts);
+    const hasMore = posts.length > limit;
+    if (hasMore) posts.pop();
+
+    return NextResponse.json({ posts, nextCursor: hasMore ? posts[posts.length - 1]?.id : null });
   } catch (error) {
     logError("posts_GET", error);
     return jsonError("Failed to fetch posts", 500);

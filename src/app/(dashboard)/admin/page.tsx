@@ -23,7 +23,7 @@ export default function AdminPage() {
     }).catch(() => setLoading(false));
     api.family.info().then((data) => {
       if (data.family) setFamilyInfo(data);
-    }).catch(() => {});
+    }).catch(() => { toast.error("Ошибка загрузки данных семьи"); });
   }, []);
 
   const handleRemoveUser = async (userId: string, userName: string) => {

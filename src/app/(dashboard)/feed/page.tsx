@@ -18,10 +18,10 @@ export default function FeedPage() {
   const currentUserId = user?.id;
   const currentUserRole = user?.role;
   const [posts, setPosts] = useState<any[]>([]);
-  const [allPosts, setAllPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [visibleCount, setVisibleCount] = useState(POSTS_PER_PAGE);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
 
   const mapPost = useCallback((p: any) => ({
     ...p,
@@ -42,31 +42,40 @@ export default function FeedPage() {
   }), [currentUserId]);
 
   const fetchPosts = useCallback(async (isRefresh = false) => {
-    if (isRefresh) setRefreshing(true);
+    if (isRefresh) { setRefreshing(true); setHasMore(true); }
     try {
-      const data = await api.posts.list();
-      const mapped = data.map(mapPost);
-      setAllPosts(mapped);
-      setPosts(mapped.slice(0, visibleCount));
-    } catch (e) {
-      console.error("Failed to fetch posts:", e);
+      const data = await api.posts.list({ limit: POSTS_PER_PAGE });
+      setPosts(data.posts.map(mapPost));
+      setHasMore(!!data.nextCursor);
+    } catch {
+      toast.error("Ошибка загрузки постов");
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [mapPost, visibleCount]);
+  }, [mapPost]);
+
+  const loadMore = useCallback(async () => {
+    if (loadingMore || !hasMore || posts.length === 0) return;
+    setLoadingMore(true);
+    try {
+      const lastId = posts[posts.length - 1]?.id;
+      const data = await api.posts.list({ cursor: lastId, limit: POSTS_PER_PAGE });
+      setPosts((prev) => [...prev, ...data.posts.map(mapPost)]);
+      setHasMore(!!data.nextCursor);
+    } catch {
+      toast.error("Ошибка загрузки");
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [loadingMore, hasMore, posts, mapPost]);
 
   useEffect(() => { fetchPosts(); }, [fetchPosts]);
-
-  useEffect(() => {
-    setPosts(allPosts.slice(0, visibleCount));
-  }, [visibleCount, allPosts]);
 
   const handleCreatePost = async (content: string, image?: string) => {
     try {
       const newPost = await api.posts.create({ content, image });
       const mapped = mapPost(newPost);
-      setAllPosts((prev) => [mapped, ...prev]);
       setPosts((prev) => [mapped, ...prev]);
       toast.success("Пост опубликован");
     } catch (e) {
@@ -86,7 +95,6 @@ export default function FeedPage() {
   const handleDeletePost = async (id: string) => {
     try {
       await api.posts.delete(id);
-      setAllPosts((prev) => prev.filter((p) => p.id !== id));
       setPosts((prev) => prev.filter((p) => p.id !== id));
       toast.success("Пост удалён");
     } catch {
@@ -95,7 +103,6 @@ export default function FeedPage() {
   };
 
   const updatePostInState = (postId: string, updater: (p: any) => any) => {
-    setAllPosts((prev) => prev.map((p) => (p.id === postId ? updater(p) : p)));
     setPosts((prev) => prev.map((p) => (p.id === postId ? updater(p) : p)));
   };
 
@@ -137,7 +144,7 @@ export default function FeedPage() {
 
   const refreshButton = (
     <button
-      onClick={() => { setVisibleCount(POSTS_PER_PAGE); fetchPosts(true); }}
+      onClick={() => fetchPosts(true)}
       disabled={refreshing}
       className={`p-2.5 rounded-xl hover:bg-accent transition-all ${refreshing ? "opacity-50" : ""}`}
       aria-label="Обновить"
@@ -184,13 +191,14 @@ export default function FeedPage() {
           ))}
         </div>
       )}
-      {visibleCount < allPosts.length && allPosts.length > 0 && (
+      {hasMore && (
         <div className="text-center mt-8">
           <button
-            onClick={() => setVisibleCount((prev) => prev + POSTS_PER_PAGE)}
-            className="px-6 py-3 rounded-xl bg-accent hover:bg-accent/80 text-sm font-medium transition-all"
+            onClick={loadMore}
+            disabled={loadingMore}
+            className="px-6 py-3 rounded-xl bg-accent hover:bg-accent/80 text-sm font-medium transition-all disabled:opacity-50"
           >
-            Показать ещё
+            {loadingMore ? "Загрузка..." : "Показать ещё"}
           </button>
         </div>
       )}

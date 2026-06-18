@@ -104,10 +104,10 @@ export default function MemberPage() {
       setProfile(data);
       setStats(data.stats || { posts: 0, comments: 0, likes: 0 });
       setForm({ name: data.name || "", bio: data.bio || "", phone: data.phone || "" });
-    }).catch(() => {});
+    }).catch(() => { toast.error("Ошибка загрузки профиля"); });
     api.family.info().then((data) => {
       if (data.family) setFamilyInfo(data);
-    }).catch(() => {});
+    }).catch(() => { toast.error("Ошибка загрузки семьи"); });
   }, []);
 
   const handleSave = async () => {

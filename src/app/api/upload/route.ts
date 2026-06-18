@@ -17,11 +17,21 @@ export async function POST(req: NextRequest) {
     const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif", "application/pdf"];
     if (!allowedTypes.includes(file.type)) return NextResponse.json({ error: "Invalid file type" }, { status: 400 });
 
-    const buffer = Buffer.from(await file.arrayBuffer());
+    let buffer = Buffer.from(await file.arrayBuffer());
+    if (file.type.startsWith("image/")) {
+      try {
+        const sharp = (await import("sharp")).default;
+        const compressed = await sharp(buffer)
+          .resize(1200, 1200, { fit: "inside", withoutEnlargement: true })
+          .jpeg({ quality: 80 })
+          .toBuffer();
+        buffer = Buffer.from(compressed);
+      } catch {}
+    }
     const base64 = buffer.toString("base64");
-    const dataUrl = `data:${file.type};base64,${base64}`;
+    const dataUrl = `data:image/jpeg;base64,${base64}`;
 
-    return NextResponse.json({ url: dataUrl, name: file.name, size: file.size });
+    return NextResponse.json({ url: dataUrl, name: file.name, size: buffer.length });
   } catch (error) {
     logError("upload", error);
     return jsonError("Upload failed", 500);
