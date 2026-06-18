@@ -39,8 +39,12 @@ export function PostCard({ post, currentUserId, currentUserRole, onToggleLike, o
           </button>
         )}
         <div className="flex items-center gap-3 p-4 pb-0">
-          <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${getAvatarColor(post.author?.name || "U")} flex items-center justify-center text-white font-bold shrink-0`}>
-            {getInitials(post.author?.name || "U")}
+          <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${getAvatarColor(post.author?.name || "U")} flex items-center justify-center text-white font-bold shrink-0 overflow-hidden`}>
+            {post.author?.image ? (
+              <img src={post.author.image} alt="" className="w-full h-full object-cover" />
+            ) : (
+              getInitials(post.author?.name || "U")
+            )}
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-sm truncate">{post.author?.name || "Пользователь"}</p>
@@ -86,8 +90,12 @@ export function PostCard({ post, currentUserId, currentUserRole, onToggleLike, o
               <div className="space-y-2 mb-3 max-h-60 overflow-y-auto">
                 {post.comments.map((c: any) => (
                   <div key={c.id} className="flex gap-2 items-start group/comment">
-                    <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${getAvatarColor(c.author?.name || "U")} flex items-center justify-center text-white font-bold text-[10px] shrink-0 mt-0.5`}>
-                      {getInitials(c.author?.name || "U")}
+                    <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${getAvatarColor(c.author?.name || "U")} flex items-center justify-center text-white font-bold text-[10px] shrink-0 mt-0.5 overflow-hidden`}>
+                      {c.author?.image ? (
+                        <img src={c.author.image} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        getInitials(c.author?.name || "U")
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">

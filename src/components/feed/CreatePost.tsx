@@ -3,6 +3,8 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { api } from "@/lib/api";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { getInitials, getAvatarColor } from "@/lib/utils";
 import toast from "react-hot-toast";
 
 interface CreatePostProps {
@@ -10,6 +12,7 @@ interface CreatePostProps {
 }
 
 export function CreatePost({ onSubmit }: CreatePostProps) {
+  const { user } = useCurrentUser();
   const [isExpanded, setIsExpanded] = useState(false);
   const [content, setContent] = useState("");
   const [image, setImage] = useState<string | null>(null);
@@ -30,7 +33,8 @@ export function CreatePost({ onSubmit }: CreatePostProps) {
     if (!file) return;
     setUploading(true);
     try {
-      const res = await api.upload.file(file);
+      const compressed = await compressImage(file, 800, 0.7);
+      const res = await api.upload.file(compressed);
       setImage(res.url);
       toast.success("Фото загружено");
     } catch {
@@ -40,6 +44,31 @@ export function CreatePost({ onSubmit }: CreatePostProps) {
     }
   };
 
+async function compressImage(file: File, maxWidth: number, quality: number): Promise<File> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      let { width, height } = img;
+      if (width > maxWidth) {
+        height = Math.round((height * maxWidth) / width);
+        width = maxWidth;
+      }
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) { reject(new Error("No canvas context")); return; }
+      ctx.drawImage(img, 0, 0, width, height);
+      canvas.toBlob((blob) => {
+        if (!blob) { reject(new Error("Compression failed")); return; }
+        resolve(new File([blob], file.name, { type: "image/jpeg" }));
+      }, "image/jpeg", quality);
+    };
+    img.onerror = () => reject(new Error("Image load failed"));
+    img.src = URL.createObjectURL(file);
+  });
+}
+
   return (
     <div className="glass-card overflow-hidden">
       {!isExpanded ? (
@@ -47,8 +76,12 @@ export function CreatePost({ onSubmit }: CreatePostProps) {
           onClick={() => setIsExpanded(true)}
           className="w-full flex items-center gap-3 p-4 text-left"
         >
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold shrink-0">
-            В
+          <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${getAvatarColor(user?.name || "В")} flex items-center justify-center text-white font-bold shrink-0 overflow-hidden`}>
+            {user?.image ? (
+              <img src={user.image} alt="" className="w-full h-full object-cover" />
+            ) : (
+              getInitials(user?.name || "В")
+            )}
           </div>
           <span className="text-muted-foreground">Поделитесь семейной новостью...</span>
         </button>
@@ -59,8 +92,12 @@ export function CreatePost({ onSubmit }: CreatePostProps) {
           className="p-4"
         >
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold shrink-0">
-              В
+            <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${getAvatarColor(user?.name || "В")} flex items-center justify-center text-white font-bold shrink-0 overflow-hidden`}>
+              {user?.image ? (
+                <img src={user.image} alt="" className="w-full h-full object-cover" />
+              ) : (
+                getInitials(user?.name || "В")
+              )}
             </div>
             <div>
               <p className="font-medium text-sm">Новая публикация</p>

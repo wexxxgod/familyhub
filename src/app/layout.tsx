@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { ThemeProvider } from "@/components/shared/ThemeProvider";
-import { SessionProvider } from "@/components/shared/SessionProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -39,9 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-screen bg-background text-foreground">
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-          <SessionProvider>
-            {children}
-          </SessionProvider>
+          {children}
         </ThemeProvider>
       </body>
     </html>

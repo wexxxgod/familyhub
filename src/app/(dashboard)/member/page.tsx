@@ -167,8 +167,12 @@ export default function MemberPage() {
                 const isSelf = m.id === user?.id;
                 return (
                   <div key={m.id} className="flex items-center gap-2 text-sm group">
-                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-[10px] font-bold shrink-0">
-                      {(m.name || "?")[0]}
+                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-[10px] font-bold shrink-0 overflow-hidden">
+                      {m.image ? (
+                        <img src={m.image} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        (m.name || "?")[0]
+                      )}
                     </div>
                     <span className="truncate flex-1">{m.name}</span>
                     <span className="text-[10px] text-muted-foreground capitalize">Участник</span>

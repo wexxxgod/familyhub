@@ -220,6 +220,7 @@ function CreateFamilyForm({ onBack }: { onBack: () => void }) {
   const [error, setError] = useState("");
   const [step, setStep] = useState<"register" | "creating" | "done">("register");
   const [loading, setLoading] = useState(false);
+  const [inviteCode, setInviteCode] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -281,6 +282,8 @@ function CreateFamilyForm({ onBack }: { onBack: () => void }) {
         return;
       }
 
+      const familyData = await familyRes.json();
+      setInviteCode(familyData.inviteCode || "");
       setStep("done");
       setTimeout(() => { window.location.href = "/feed"; }, 600);
     } catch {
@@ -316,7 +319,15 @@ function CreateFamilyForm({ onBack }: { onBack: () => void }) {
               </svg>
             </div>
             <h3 className="text-lg font-semibold mb-1">Семья создана!</h3>
-            <p className="text-sm text-muted-foreground">Перенаправляем...</p>
+            {inviteCode && (
+              <div className="mt-3 mb-2">
+                <p className="text-sm text-muted-foreground mb-2">Код для приглашения родных:</p>
+                <div className="inline-block px-6 py-3 rounded-xl bg-amber-500/10 border border-amber-500/30 font-mono tracking-widest text-xl font-bold text-amber-400">
+                  {inviteCode}
+                </div>
+              </div>
+            )}
+            <p className="text-sm text-muted-foreground mt-3">Перенаправляем...</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">

@@ -1,13 +1,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { api } from "@/lib/api";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import toast from "react-hot-toast";
 
 const CATEGORIES = ["Все", "PHOTO", "VIDEO", "DOCUMENT", "CERTIFICATE", "HEIRLOOM"];
 const CAT_NAMES: Record<string, string> = { PHOTO: "Фото", VIDEO: "Видео", DOCUMENT: "Документы", CERTIFICATE: "Свидетельства", HEIRLOOM: "Реликвии" };
+const CAT_ICONS: Record<string, string> = {
+  PHOTO: "M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z",
+  VIDEO: "M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z",
+  DOCUMENT: "M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z",
+  CERTIFICATE: "M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z",
+  HEIRLOOM: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4",
+};
 
 export default function ArchivePage() {
   const { user } = useCurrentUser();
@@ -16,6 +23,10 @@ export default function ArchivePage() {
   const [search, setSearch] = useState("");
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [form, setForm] = useState({ title: "", description: "", url: "", category: "PHOTO", year: "" });
+  const [submitting, setSubmitting] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     api.archive.list().then((data) => {
@@ -30,6 +41,44 @@ export default function ArchivePage() {
       setItems(items.filter((item) => item.id !== id));
       toast.success("Элемент удалён из архива");
     } catch { toast.error("Ошибка при удалении"); }
+  };
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.title.trim()) { toast.error("Введите название"); return; }
+    setSubmitting(true);
+    try {
+      const item = await api.archive.create({
+        title: form.title.trim(),
+        description: form.description.trim(),
+        url: form.url.trim() || undefined,
+        category: form.category,
+        year: form.year || undefined,
+      });
+      setItems([item, ...items]);
+      setShowModal(false);
+      setForm({ title: "", description: "", url: "", category: "PHOTO", year: "" });
+      toast.success("Элемент добавлен в архив");
+    } catch {
+      toast.error("Ошибка при добавлении");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const res = await api.upload.file(file);
+      setForm((prev) => ({ ...prev, url: res.url }));
+      toast.success("Файл загружен");
+    } catch {
+      toast.error("Ошибка загрузки");
+    } finally {
+      setUploading(false);
+    }
   };
 
   const filtered = items.filter((item) => {
@@ -58,12 +107,18 @@ export default function ArchivePage() {
           <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
           <input type="search" placeholder="Поиск в архиве..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-accent outline-none text-sm" />
         </div>
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 flex-wrap items-center">
           {CATEGORIES.map((cat) => (
             <button key={cat} onClick={() => setCategory(cat)} className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${category === cat ? "bg-primary text-primary-foreground" : "bg-accent hover:bg-accent/80"}`}>
               {cat === "Все" ? "Все" : CAT_NAMES[cat] || cat}
             </button>
           ))}
+          <button
+            onClick={() => setShowModal(true)}
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-semibold hover:opacity-90 transition-all ml-2"
+          >
+            + Добавить
+          </button>
         </div>
       </div>
 
@@ -85,16 +140,101 @@ export default function ArchivePage() {
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
                 </button>
               )}
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center mb-3">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-blue-500">
-                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></svg>
-              </div>
+              {item.url && (
+                <div className="w-full h-32 rounded-xl overflow-hidden mb-3">
+                  <img src={item.url} alt={item.title} className="w-full h-full object-cover" />
+                </div>
+              )}
+              {!item.url && (
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center mb-3">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-blue-500">
+                    <path d={CAT_ICONS[item.category as keyof typeof CAT_ICONS] || "M4 19.5A2.5 2.5 0 0 1 6.5 17H20"} />
+                  </svg>
+                </div>
+              )}
               <h3 className="font-semibold text-sm mb-1">{item.title}</h3>
+              {item.description && <p className="text-xs text-muted-foreground mb-1 line-clamp-2">{item.description}</p>}
               <p className="text-xs text-muted-foreground">{CAT_NAMES[item.category] || item.category}{item.year ? ` • ${item.year}` : ""}</p>
             </motion.div>
           ))}
         </div>
       )}
+
+      <AnimatePresence>
+        {showModal && (
+          <>
+            <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setShowModal(false)} />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            >
+              <div className="glass-card p-6 w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-bold">Добавить в архив</h2>
+                  <button onClick={() => setShowModal(false)} className="p-1.5 rounded-lg hover:bg-accent transition-colors">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                  </button>
+                </div>
+
+                <form onSubmit={handleCreate} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Название *</label>
+                    <input type="text" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-background border border-input focus:border-ring focus:ring-1 focus:ring-ring outline-none transition-all"
+                      placeholder="Название элемента" required />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Описание</label>
+                    <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-background border border-input focus:border-ring focus:ring-1 focus:ring-ring outline-none transition-all min-h-[80px] resize-none"
+                      placeholder="Краткое описание" />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Категория *</label>
+                    <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-background border border-input focus:border-ring focus:ring-1 focus:ring-ring outline-none transition-all">
+                      {CATEGORIES.filter((c) => c !== "Все").map((cat) => (
+                        <option key={cat} value={cat}>{CAT_NAMES[cat]}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Год</label>
+                    <input type="number" value={form.year} onChange={(e) => setForm({ ...form, year: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-background border border-input focus:border-ring focus:ring-1 focus:ring-ring outline-none transition-all"
+                      placeholder="2024" min="1900" max="2099" />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Файл или ссылка</label>
+                    <input type="text" value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-background border border-input focus:border-ring focus:ring-1 focus:ring-ring outline-none transition-all mb-2"
+                      placeholder="URL изображения или документа" />
+                    <div className="flex items-center gap-2">
+                      <button type="button" onClick={() => document.getElementById("archive-file-input")?.click()}
+                        disabled={uploading}
+                        className="px-4 py-2 rounded-xl bg-accent hover:bg-accent/80 text-sm transition-all disabled:opacity-50">
+                        {uploading ? "Загрузка..." : "Загрузить файл"}
+                      </button>
+                      <input id="archive-file-input" type="file" accept="image/*,.pdf" className="hidden" onChange={handleFileUpload} />
+                    </div>
+                  </div>
+
+                  <button type="submit" disabled={submitting || !form.title.trim()}
+                    className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold hover:opacity-90 transition-all disabled:opacity-50">
+                    {submitting ? "Добавление..." : "Добавить в архив"}
+                  </button>
+                </form>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

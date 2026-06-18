@@ -156,7 +156,7 @@ export function DashboardHeader() {
                     <p className="text-xs text-muted-foreground">{sessionUser?.email}</p>
                   </div>
                   <Link href="/member" className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-accent transition-colors" onClick={() => setMenuOpen(false)}>Мой профиль</Link>
-                  <button onClick={() => handleLogout} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-red-500 hover:bg-red-500/10 transition-colors w-full">Выйти</button>
+                  <button onClick={handleLogout} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-red-500 hover:bg-red-500/10 transition-colors w-full">Выйти</button>
                 </div>
               </>
             )}

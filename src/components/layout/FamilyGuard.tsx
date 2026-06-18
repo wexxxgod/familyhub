@@ -39,10 +39,10 @@ export function FamilyGuard({ children }: { children: React.ReactNode }) {
       } catch {
         if (cancelled) return;
         retries++;
-        if (retries >= 10) {
+        if (retries >= 15) {
           window.location.href = "/login";
         } else {
-          setTimeout(check, 500);
+          setTimeout(check, Math.min(1000 * Math.pow(1.5, retries - 1), 10000));
         }
       }
     }
