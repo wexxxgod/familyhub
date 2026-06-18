@@ -42,6 +42,10 @@ export const api = {
   notifications: {
     list: () => request<any[]>("/api/notifications"),
     markRead: (id: string) => request<any>("/api/notifications", { method: "PATCH", body: JSON.stringify({ id }) }),
+    subscribe: (endpoint: string, keys: { p256dh: string; auth: string }) =>
+      request<any>("/api/notifications/subscribe", { method: "POST", body: JSON.stringify({ endpoint, keys }) }),
+    unsubscribe: (endpoint: string) =>
+      request<any>("/api/notifications/subscribe", { method: "DELETE", body: JSON.stringify({ endpoint }) }),
   },
   polls: {
     list: () => request<any[]>("/api/polls"),

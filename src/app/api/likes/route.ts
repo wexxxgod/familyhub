@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser, logError, jsonError, safeInt, safeDate, Role } from "@/lib/auth-helpers";
+import { notifyUser } from "@/lib/push";
 
 export async function POST(req: NextRequest) {
   try {
@@ -34,6 +35,11 @@ export async function POST(req: NextRequest) {
           link: "/feed",
           userId: post.authorId,
         },
+      });
+      notifyUser(post.authorId, {
+        title: "Новый лайк ❤️",
+        body: `${user.name || "Кто-то"} оценил ваш пост`,
+        link: "/feed",
       });
     }
 
