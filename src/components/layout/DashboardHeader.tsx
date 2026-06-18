@@ -198,19 +198,32 @@ export function DashboardHeader() {
       {drawerOpen && (
         <>
           <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden" onClick={() => setDrawerOpen(false)} />
-          <div className="fixed top-0 left-0 bottom-0 w-[280px] z-50 glass-sidebar shadow-2xl lg:hidden animate-drawer-in overflow-y-auto">
-            <div className="p-5 border-b border-border/40 flex items-center justify-between">
+          <div className="fixed top-0 left-0 bottom-0 w-[280px] z-50 glass-sidebar shadow-2xl lg:hidden animate-drawer-in overflow-y-auto flex flex-col">
+            <div className="p-5 border-b border-border/40 flex items-center justify-between shrink-0">
               <Link href="/feed" className="flex items-center gap-3" onClick={() => setDrawerOpen(false)}>
                 <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-lg">
                   <span className="text-white font-bold text-base">🏠</span>
                 </div>
-                <span className="font-semibold text-lg text-gradient font-['Fredoka']">FamilyHub</span>
+                <span className="font-semibold text-base text-gradient font-['Fredoka']">FamilyHub</span>
               </Link>
               <button aria-label="Закрыть меню" onClick={() => setDrawerOpen(false)} className="p-2.5 rounded-full hover:bg-white/40 dark:hover:bg-white/5 transition-all">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
               </button>
             </div>
-            <nav className="p-3 space-y-1">
+
+            {sessionUser && (
+              <div className="p-4 border-b border-border/40 shrink-0">
+                <Link href="/member" onClick={() => setDrawerOpen(false)} className="flex items-center gap-3 group">
+                  <GradientAvatar name={sessionUser.name} image={sessionUser.image} size="md" className="!w-10 !h-10 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-sm truncate">{sessionUser.name}</p>
+                    <p className="text-xs text-muted-foreground truncate">{sessionUser.email}</p>
+                  </div>
+                </Link>
+              </div>
+            )}
+
+            <nav className="flex-1 overflow-y-auto p-3 space-y-1">
               {DRAWER_ITEMS.map((item) => {
                 const isActive = pathname === item.href;
                 return (
@@ -244,11 +257,19 @@ export function DashboardHeader() {
                 </Link>
               )}
             </nav>
-            <div className="p-4 border-t border-border/40 mt-4">
+
+            <div className="p-4 border-t border-border/40 space-y-3 shrink-0">
               <div className="flex items-center justify-between px-4 py-2.5 rounded-full bg-white/30 dark:bg-white/5">
                 <span className="text-xs text-muted-foreground font-medium">🌙 Тема</span>
                 <ThemeToggle />
               </div>
+              <button
+                onClick={handleLogout}
+                disabled={loggingOut}
+                className="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-full text-sm text-red-500 hover:bg-red-500/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                🚪 {loggingOut ? "Выход..." : "Выйти"}
+              </button>
             </div>
           </div>
         </>
