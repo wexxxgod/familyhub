@@ -192,9 +192,7 @@ export default function PetsPage() {
               animate={{ opacity: 1, scale: 1 }}
               className="glass-card overflow-hidden relative group"
             >
-              {user?.id === pet.ownerId && (
-                <DeleteButton onClick={() => handleDelete(pet.id)} disabled={deletingId === pet.id} />
-              )}
+              <DeleteButton onClick={() => handleDelete(pet.id)} disabled={deletingId === pet.id} />
               <div className="h-40 bg-gradient-to-br from-amber-500/10 to-orange-500/10 flex items-center justify-center overflow-hidden">
                 {pet.photo ? (
                   <img src={pet.photo} alt={pet.name} className="w-full h-full object-cover" />

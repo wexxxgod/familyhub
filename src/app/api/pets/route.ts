@@ -53,7 +53,7 @@ export async function DELETE(req: NextRequest) {
     const { id } = await req.json();
     const pet = await prisma.pet.findUnique({ where: { id } });
     if (!pet) return NextResponse.json({ error: "Not found" }, { status: 404 });
-    if (pet.ownerId !== user.id && user.role !== Role.SUPER_ADMIN) {
+    if (pet.familyId !== user.familyId) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
     await prisma.pet.delete({ where: { id } });
