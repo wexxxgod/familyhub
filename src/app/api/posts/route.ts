@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser, logError, jsonError, safeInt, safeDate, Role } from "@/lib/auth-helpers";
+import { notifyUser } from "@/lib/push";
 
 export async function GET(req: NextRequest) {
   try {
@@ -62,6 +63,28 @@ export async function POST(req: NextRequest) {
     await prisma.activityLog.create({
       data: { action: "CREATE_POST", details: `Post created by ${user.name}`, userId: user.id },
     });
+
+    const familyMembers = await prisma.user.findMany({
+      where: { familyId: user.familyId, id: { not: user.id } },
+      select: { id: true },
+    });
+
+    for (const member of familyMembers) {
+      await prisma.notification.create({
+        data: {
+          type: "POST",
+          title: "Новый пост",
+          message: `${user.name || "Кто-то"} опубликовал новый пост: ${(content || "").slice(0, 50)}${(content || "").length > 50 ? "..." : ""}`,
+          link: "/feed",
+          userId: member.id,
+        },
+      });
+      notifyUser(member.id, {
+        title: `Новый пост от ${user.name || "FamilyHub"} 📝`,
+        body: (content || "Без текста").slice(0, 120),
+        link: "/feed",
+      });
+    }
 
     return NextResponse.json(post);
   } catch (error) {
