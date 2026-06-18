@@ -169,7 +169,7 @@ export default function PetsPage() {
       {pets.length === 0 && !showCreate ? (
         <EmptyState
           icon={
-            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-purple-500">
+            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-amber-500">
               <path d="M20 7c-1 0-2 .5-2 2 0 1.5 1 2 1 4 0 2-1 3-3 3" />
               <path d="M4 7c1 0 2 .5 2 2 0 1.5-1 2-1 4 0 2 1 3 3 3" />
               <path d="M12 17c-2 0-4-1-4-3 0-3 2-5 4-5s4 2 4 5c0 2-2 3-4 3z" />
@@ -191,7 +191,7 @@ export default function PetsPage() {
               {user?.id === pet.ownerId && (
                 <DeleteButton onClick={() => handleDelete(pet.id)} />
               )}
-              <div className="h-40 bg-gradient-to-br from-purple-500/10 to-pink-500/10 flex items-center justify-center overflow-hidden">
+              <div className="h-40 bg-gradient-to-br from-amber-500/10 to-orange-500/10 flex items-center justify-center overflow-hidden">
                 {pet.photo ? (
                   <img src={pet.photo} alt={pet.name} className="w-full h-full object-cover" />
                 ) : (

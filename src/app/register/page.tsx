@@ -53,8 +53,8 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden">
       <div className="fixed inset-0 -z-10">
-        <div className="absolute top-[-30%] right-[-10%] w-[60%] h-[60%] rounded-full bg-pink-500/10 blur-[150px]" />
-        <div className="absolute bottom-[-30%] left-[-10%] w-[60%] h-[60%] rounded-full bg-purple-500/10 blur-[150px]" />
+        <div className="absolute top-[-30%] right-[-10%] w-[60%] h-[60%] rounded-full bg-amber-400/15 blur-[150px]" />
+        <div className="absolute bottom-[-30%] left-[-10%] w-[60%] h-[60%] rounded-full bg-rose-400/15 blur-[150px]" />
       </div>
 
       <motion.div
@@ -68,7 +68,7 @@ export default function RegisterPage() {
 
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
               <span className="text-white font-bold text-lg">F</span>
             </div>
             <span className="font-semibold text-2xl">FamilyHub</span>

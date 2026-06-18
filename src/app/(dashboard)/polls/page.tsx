@@ -98,7 +98,7 @@ export default function PollsPage() {
       )}
 
       {polls.length === 0 && !showCreate ? (
-        <EmptyState icon={<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-purple-500"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></svg>} title="Опросов пока нет" description="Создайте первый опрос" />
+        <EmptyState icon={<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-amber-500"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></svg>} title="Опросов пока нет" description="Создайте первый опрос" />
       ) : (
         <div className="space-y-6">
           {polls.map((poll) => {

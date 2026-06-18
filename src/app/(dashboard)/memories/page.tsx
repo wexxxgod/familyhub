@@ -42,7 +42,7 @@ export default function MemoriesPage() {
       <PageHeader title="Воспоминания" description="«В этот день» из истории вашей семьи" />
 
       {memories.length === 0 ? (
-        <EmptyState icon={<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-purple-500"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>} title="Пока нет воспоминаний" description="Публикуйте посты и загружайте фото — через год FamilyHub напомнит о них" />
+        <EmptyState icon={<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-amber-500"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>} title="Пока нет воспоминаний" description="Публикуйте посты и загружайте фото — через год FamilyHub напомнит о них" />
       ) : (
         <div className="space-y-4">
           {memories.map((memory, i) => (

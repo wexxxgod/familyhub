@@ -172,7 +172,7 @@ export default function FeedPage() {
       <CreatePost onSubmit={handleCreatePost} />
 
       {posts.length === 0 ? (
-        <EmptyState icon={<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-purple-500"><rect x="3" y="3" width="18" height="18" rx="2" /><line x1="9" y1="9" x2="15" y2="15" /><line x1="15" y1="9" x2="9" y2="15" /></svg>} title="В ленте пока пусто" description="Опубликуйте первый пост" />
+        <EmptyState icon={<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-amber-500"><rect x="3" y="3" width="18" height="18" rx="2" /><line x1="9" y1="9" x2="15" y2="15" /><line x1="15" y1="9" x2="9" y2="15" /></svg>} title="В ленте пока пусто" description="Опубликуйте первый пост" />
       ) : (
         <div className="space-y-6 mt-8">
           {posts.map((post, i) => (

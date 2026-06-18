@@ -99,7 +99,7 @@ export function Sidebar() {
     <aside className="fixed left-0 top-0 bottom-0 w-[240px] border-r border-border bg-sidebar hidden lg:flex flex-col z-40">
       <div className="p-5 border-b border-border">
         <Link href="/feed" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shrink-0">
             <span className="text-white font-bold text-sm">F</span>
           </div>
           <span className="font-semibold text-lg truncate">{familyName}</span>

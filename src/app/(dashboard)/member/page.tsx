@@ -170,7 +170,7 @@ export default function MemberPage() {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
         <div className="flex items-center gap-6 mb-8">
           <div className="relative group">
-            <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-3xl font-bold overflow-hidden">
+            <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-400 flex items-center justify-center text-white text-3xl font-bold overflow-hidden">
               {profile?.image ? (
                 <img src={profile.image} alt={profile.name || "Avatar"} className="w-full h-full object-cover" />
               ) : (
@@ -318,7 +318,7 @@ export default function MemberPage() {
                 const isSelf = m.id === user?.id;
                 return (
                   <div key={m.id} className="flex items-center gap-2 text-sm group">
-                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-[10px] font-bold shrink-0 overflow-hidden">
+                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-amber-400 to-orange-400 flex items-center justify-center text-white text-[10px] font-bold shrink-0 overflow-hidden">
                       {m.image ? (
                         <img src={m.image} alt={m.name || "Avatar"} className="w-full h-full object-cover" />
                       ) : (

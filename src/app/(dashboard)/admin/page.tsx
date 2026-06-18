@@ -44,8 +44,8 @@ export default function AdminPage() {
 
   const STAT_CARDS = stats
     ? [
-        { label: "Члены семьи", value: String(stats.users || 0), color: "from-purple-500/20 to-pink-500/20" },
-        { label: "Посты", value: String(stats.posts || 0), color: "from-blue-500/20 to-cyan-500/20" },
+        { label: "Члены семьи", value: String(stats.users || 0), color: "from-amber-500/20 to-orange-500/20" },
+        { label: "Посты", value: String(stats.posts || 0), color: "from-rose-500/20 to-amber-500/20" },
         { label: "События", value: String(stats.events || 0), color: "from-green-500/20 to-emerald-500/20" },
         { label: "Сообщения", value: String(stats.messages || 0), color: "from-amber-500/20 to-orange-500/20" },
       ]
@@ -77,7 +77,7 @@ export default function AdminPage() {
             {STAT_CARDS.map((stat) => (
               <div key={stat.label} className="glass-card p-5">
                 <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center mb-3`}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-purple-500">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-amber-500">
                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
                   </svg>
                 </div>
@@ -100,7 +100,7 @@ export default function AdminPage() {
               const isSelf = m.id === currentUser.id;
               return (
                 <div key={m.id} className="p-4 flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-bold shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-400 flex items-center justify-center text-white font-bold shrink-0">
                     {(m.name || "?")[0]}
                   </div>
                   <div className="flex-1 min-w-0">

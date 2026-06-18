@@ -15,8 +15,8 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden">
       <div className="fixed inset-0 -z-10">
-        <div className="absolute top-[-30%] left-[-10%] w-[60%] h-[60%] rounded-full bg-purple-500/10 blur-[150px]" />
-        <div className="absolute bottom-[-30%] right-[-10%] w-[60%] h-[60%] rounded-full bg-blue-500/10 blur-[150px]" />
+        <div className="absolute top-[-30%] left-[-10%] w-[60%] h-[60%] rounded-full bg-amber-400/15 blur-[150px]" />
+        <div className="absolute bottom-[-30%] right-[-10%] w-[60%] h-[60%] rounded-full bg-rose-400/15 blur-[150px]" />
       </div>
 
       <div className="absolute top-6 right-6">
@@ -32,7 +32,7 @@ export default function LoginPage() {
       >
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
               <span className="text-white font-bold text-lg">F</span>
             </div>
             <span className="font-semibold text-2xl">FamilyHub</span>
@@ -64,10 +64,10 @@ function ModeSelect({ onSelect }: { onSelect: (mode: Mode) => void }) {
       <div className="glass-card p-6 space-y-4">
         <button
           onClick={() => onSelect("login")}
-          className="w-full p-5 rounded-2xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 hover:border-purple-500/40 transition-all text-left group"
+          className="w-full p-5 rounded-2xl bg-gradient-to-br from-rose-500/10 to-amber-500/10 border border-rose-500/20 hover:border-rose-500/40 transition-all text-left group"
         >
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-500 to-amber-500 flex items-center justify-center shrink-0">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" /><polyline points="10 17 15 12 10 7" /><line x1="15" y1="12" x2="3" y2="12" />
               </svg>
@@ -104,10 +104,10 @@ function ModeSelect({ onSelect }: { onSelect: (mode: Mode) => void }) {
 
         <button
           onClick={() => onSelect("join")}
-          className="w-full p-5 rounded-2xl bg-gradient-to-br from-blue-500/10 to-teal-500/10 border border-blue-500/20 hover:border-blue-500/40 transition-all text-left group"
+          className="w-full p-5 rounded-2xl bg-gradient-to-br from-teal-500/10 to-emerald-500/10 border border-teal-500/20 hover:border-teal-500/40 transition-all text-left group"
         >
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-teal-500 flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center shrink-0">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="8.5" cy="7" r="4" /><line x1="20" y1="8" x2="20" y2="14" /><line x1="23" y1="11" x2="17" y2="11" />
               </svg>
@@ -579,7 +579,7 @@ function JoinFamilyForm({ onBack }: { onBack: () => void }) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-500 to-teal-500 text-white font-semibold hover:opacity-90 transition-all disabled:opacity-50"
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-semibold hover:opacity-90 transition-all disabled:opacity-50"
             >
               {loading ? (step === "joining" ? "Вступление..." : "Регистрация...") : "Присоединиться"}
             </button>

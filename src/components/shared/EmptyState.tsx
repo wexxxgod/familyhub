@@ -15,7 +15,7 @@ export function EmptyState({ icon, title, description }: EmptyStateProps) {
       transition={{ delay: 0.2 }}
       className="glass-card p-12 text-center"
     >
-      <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center mx-auto mb-4">
+      <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center mx-auto mb-4">
         {icon}
       </div>
       <h3 className="text-lg font-semibold mb-2">{title}</h3>
