@@ -2,8 +2,8 @@ const BASE = "";
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${url}`, {
-    headers: { "Content-Type": "application/json", ...options?.headers },
     ...options,
+    headers: { "Content-Type": "application/json", ...options?.headers },
   });
   if (res.status === 401 && typeof window !== "undefined") {
     window.location.href = "/login";

@@ -20,12 +20,16 @@ export function CreatePost({ onSubmit }: CreatePostProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleSubmit = () => {
-    if (!content.trim()) return;
-    onSubmit(content.trim(), image || undefined);
-    setContent("");
-    setImage(null);
-    setIsExpanded(false);
+  const handleSubmit = async () => {
+    if (!content.trim() || uploading) return;
+    try {
+      await onSubmit(content.trim(), image || undefined);
+      setContent("");
+      setImage(null);
+      setIsExpanded(false);
+    } catch {
+      toast.error("Ошибка при публикации");
+    }
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -47,6 +51,7 @@ export function CreatePost({ onSubmit }: CreatePostProps) {
 async function compressImage(file: File, maxWidth: number, quality: number): Promise<File> {
   return new Promise((resolve, reject) => {
     const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
     img.onload = () => {
       const canvas = document.createElement("canvas");
       let { width, height } = img;
@@ -57,15 +62,16 @@ async function compressImage(file: File, maxWidth: number, quality: number): Pro
       canvas.width = width;
       canvas.height = height;
       const ctx = canvas.getContext("2d");
-      if (!ctx) { reject(new Error("No canvas context")); return; }
+      if (!ctx) { URL.revokeObjectURL(objectUrl); reject(new Error("No canvas context")); return; }
       ctx.drawImage(img, 0, 0, width, height);
       canvas.toBlob((blob) => {
+        URL.revokeObjectURL(objectUrl);
         if (!blob) { reject(new Error("Compression failed")); return; }
         resolve(new File([blob], file.name, { type: "image/jpeg" }));
       }, "image/jpeg", quality);
     };
-    img.onerror = () => reject(new Error("Image load failed"));
-    img.src = URL.createObjectURL(file);
+    img.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error("Image load failed")); };
+    img.src = objectUrl;
   });
 }
 
@@ -108,6 +114,7 @@ async function compressImage(file: File, maxWidth: number, quality: number): Pro
               <button
                 onClick={() => setImage(null)}
                 className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/50 text-white hover:bg-black/70 transition-colors"
+                aria-label="Удалить фото"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
               </button>
@@ -120,7 +127,7 @@ async function compressImage(file: File, maxWidth: number, quality: number): Pro
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
                 className="p-2 rounded-lg hover:bg-accent text-muted-foreground transition-colors disabled:opacity-50"
-                title="Добавить фото"
+                aria-label="Добавить фото"
               >
                 {uploading ? (
                   <div className="w-4 h-4 rounded-full border-2 border-primary border-t-transparent animate-spin" />
@@ -140,7 +147,7 @@ async function compressImage(file: File, maxWidth: number, quality: number): Pro
             </div>
             <div className="flex gap-2">
               <button
-                onClick={() => { setIsExpanded(false); setContent(""); setImage(null); }}
+                onClick={() => { setIsExpanded(false); setContent(""); setImage(""); }}
                 className="px-4 py-2 rounded-xl text-sm hover:bg-accent transition-colors"
               >
                 Отмена

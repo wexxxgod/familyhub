@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { api } from "@/lib/api";
 import { GradientAvatar } from "@/components/shared/GradientAvatar";
+import toast from "react-hot-toast";
 
 export default function ChatPage() {
   const { user } = useCurrentUser();
@@ -17,7 +18,7 @@ export default function ChatPage() {
   const fetchMessages = useCallback(async () => {
     try {
       const data = await api.chat.list();
-      setMessages(data.reverse());
+      setMessages([...data].reverse());
       setLoading(false);
     } catch { setLoading(false); }
   }, []);
@@ -28,12 +29,10 @@ export default function ChatPage() {
 
   useEffect(() => {
     if (!currentUserId) return;
-    const handleVisibility = () => {
-      if (document.hidden) clearInterval(t);
-    };
-    const t = setInterval(() => { if (!document.hidden) fetchMessages(); }, 5000);
-    document.addEventListener("visibilitychange", handleVisibility);
-    return () => { clearInterval(t); document.removeEventListener("visibilitychange", handleVisibility); };
+    const t = setInterval(() => {
+      if (!document.hidden) fetchMessages();
+    }, 5000);
+    return () => { clearInterval(t); };
   }, [currentUserId, fetchMessages]);
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
@@ -42,9 +41,9 @@ export default function ChatPage() {
     if (!input.trim()) return;
     try {
       const msg = await api.chat.send({ content: input.trim() });
-      setMessages([...messages, { ...msg, sender: { id: currentUserId, name: user?.name } }]);
+      setMessages((prev) => [...prev, { ...msg, sender: { id: currentUserId, name: user?.name } }]);
       setInput("");
-    } catch (e) { console.error(e); }
+    } catch { toast.error("Ошибка при отправке"); }
   };
 
   const isFromMe = (msg: any) => msg.senderId === currentUserId;

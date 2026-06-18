@@ -137,7 +137,17 @@ export async function PATCH(req: NextRequest) {
 
     const family = await prisma.family.findUnique({ where: { id: user.familyId } });
     if (!family || family.createdBy !== user.id) {
-      return NextResponse.json({ error: "Только создатель может обновить код" }, { status: 403 });
+      return NextResponse.json({ error: "Только создатель может менять настройки" }, { status: 403 });
+    }
+
+    const body = await req.json();
+
+    if (body.name?.trim()) {
+      await prisma.family.update({
+        where: { id: user.familyId },
+        data: { name: body.name.trim() },
+      });
+      return NextResponse.json({ success: true });
     }
 
     const inviteCode = generateInviteCode();
@@ -149,6 +159,6 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ inviteCode });
   } catch (error) {
     logError("family_PATCH", error);
-    return jsonError("Failed to regenerate code", 500);
+    return jsonError("Failed to update family", 500);
   }
 }

@@ -15,16 +15,36 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [familyInfo, setFamilyInfo] = useState<any>(null);
   const [removing, setRemoving] = useState<string | null>(null);
+  const [familyName, setFamilyName] = useState("");
+  const [savingName, setSavingName] = useState(false);
 
   useEffect(() => {
-    api.admin.stats().then((data) => {
-      setStats(data);
-      setLoading(false);
-    }).catch(() => setLoading(false));
+    api.admin.stats().then((data) => { setStats(data); }).catch(() => {}).finally(() => setLoading(false));
     api.family.info().then((data) => {
-      if (data.family) setFamilyInfo(data);
+      if (data.family) {
+        setFamilyInfo(data);
+        setFamilyName(data.family.name || "");
+      }
     }).catch(() => { toast.error("Ошибка загрузки данных семьи"); });
   }, []);
+
+  const handleSaveName = async () => {
+    if (!familyName.trim() || savingName) return;
+    setSavingName(true);
+    try {
+      const res = await fetch("/api/family", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: familyName.trim() }),
+      });
+      if (!res.ok) throw new Error();
+      toast.success("Название семьи обновлено");
+    } catch {
+      toast.error("Ошибка при сохранении");
+    } finally {
+      setSavingName(false);
+    }
+  };
 
   const handleRemoveUser = async (userId: string, userName: string) => {
     if (!confirm(`Удалить ${userName} из семьи?`)) return;
@@ -143,9 +163,9 @@ export default function AdminPage() {
                 <p className="font-medium text-sm">Название семьи</p>
                 <p className="text-xs text-muted-foreground">Как будет называться ваше семейное пространство</p>
               </div>
-              <input type="text" placeholder={familyInfo?.family?.name || "Семья"} className="px-4 py-2 rounded-xl bg-accent outline-none text-sm w-48" />
+              <input type="text" value={familyName} onChange={(e) => setFamilyName(e.target.value)} placeholder="Название семьи" className="px-4 py-2 rounded-xl bg-accent outline-none text-sm w-48" />
             </div>
-            <button className="px-6 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-all">Сохранить</button>
+            <button onClick={handleSaveName} disabled={!familyName.trim() || savingName} className="px-6 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-all disabled:opacity-50">{savingName ? "Сохранение..." : "Сохранить"}</button>
           </div>
         </div>
       )}

@@ -56,9 +56,14 @@ export function PostCard({ post, currentUserId, currentUserRole, onToggleLike, o
   const handleComment = async () => {
     if (!commentText.trim() || sending) return;
     setSending(true);
-    await onComment(commentText.trim());
-    setCommentText("");
-    setSending(false);
+    try {
+      await onComment(commentText.trim());
+      setCommentText("");
+    } catch {
+      toast.error("Ошибка при отправке комментария");
+    } finally {
+      setSending(false);
+    }
   };
 
   return (

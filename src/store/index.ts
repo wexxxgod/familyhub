@@ -50,8 +50,10 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   markAllRead: async () => {
-    await api.notifications.markRead("all");
-    set({ unreadCount: 0, notifications: get().notifications.map((n) => ({ ...n, read: true })) });
+    try {
+      await api.notifications.markRead("all");
+      set({ unreadCount: 0, notifications: get().notifications.map((n) => ({ ...n, read: true })) });
+    } catch {}
   },
 
   setSearchQuery: (q) => set({ searchQuery: q }),
