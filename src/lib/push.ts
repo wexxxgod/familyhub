@@ -33,8 +33,11 @@ function createVAPIDJWT(audience: string): string {
   return `${signingInput}.${toBase64URL(signature)}`;
 }
 
-function hkdf(salt: Buffer, ikm: Buffer, info: Buffer, length: number): Buffer {
-  const prk = crypto.createHmac("sha256", salt).update(ikm).digest();
+function hkdfExtract(salt: Buffer, ikm: Buffer): Buffer {
+  return crypto.createHmac("sha256", salt).update(ikm).digest();
+}
+
+function hkdfExpand(prk: Buffer, info: Buffer, length: number): Buffer {
   const blocks: Buffer[] = [];
   let T = Buffer.alloc(0);
   for (let i = 1; Buffer.concat(blocks).length < length; i++) {
@@ -54,9 +57,9 @@ function encryptPayload(
   serverCurve.generateKeys();
   const serverPublic = serverCurve.getPublicKey();
   const sharedSecret = serverCurve.computeSecret(p256dh);
-  const prk = hkdf(auth, sharedSecret, Buffer.from("Content-Encoding: auth\0"), 32);
-  const cek = hkdf(salt, prk, Buffer.from("Content-Encoding: aes128gcm\0"), 16);
-  const nonce = hkdf(salt, prk, Buffer.from("Content-Encoding: nonce\0"), 12);
+  const prk = hkdfExtract(auth, sharedSecret);
+  const cek = hkdfExpand(prk, Buffer.from("Content-Encoding: aes128gcm\0"), 16);
+  const nonce = hkdfExpand(prk, Buffer.from("Content-Encoding: nonce\0"), 12);
 
   const record = Buffer.concat([Buffer.from([0x00]), payload]);
   const cipher = crypto.createCipheriv("aes-128-gcm", cek, nonce);
