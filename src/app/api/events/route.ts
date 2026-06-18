@@ -44,6 +44,32 @@ export async function POST(req: NextRequest) {
   }
 }
 
+export async function PATCH(req: NextRequest) {
+  try {
+    const user = await getCurrentUser(req);
+    if (!user) return jsonError("Unauthorized", 401);
+    const { id, title, date, type, description } = await req.json();
+    const event = await prisma.event.findUnique({ where: { id } });
+    if (!event) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (event.createdById !== user.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+    const updated = await prisma.event.update({
+      where: { id },
+      data: {
+        ...(title !== undefined && { title }),
+        ...(date !== undefined && { date: safeDate(date)! }),
+        ...(type !== undefined && { type }),
+        ...(description !== undefined && { description }),
+      },
+    });
+    return NextResponse.json(updated);
+  } catch (error) {
+    logError("events_PATCH", error);
+    return jsonError("Failed to update event", 500);
+  }
+}
+
 export async function DELETE(req: NextRequest) {
   try {
     const user = await getCurrentUser(req);

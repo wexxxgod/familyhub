@@ -74,6 +74,15 @@ export default function FeedPage() {
     }
   };
 
+  const handleEditPost = async (id: string, data: { content: string; tags?: string[] }) => {
+    try {
+      const updated = await api.posts.update(id, data);
+      updatePostInState(id, () => mapPost(updated));
+    } catch {
+      toast.error("Ошибка при редактировании");
+    }
+  };
+
   const handleDeletePost = async (id: string) => {
     try {
       await api.posts.delete(id);
@@ -168,6 +177,7 @@ export default function FeedPage() {
                 onToggleLike={() => handleToggleLike(post.id)}
                 onComment={(content) => handleComment(post.id, content)}
                 onDelete={handleDeletePost}
+                onEdit={handleEditPost}
                 onDeleteComment={(commentId) => handleDeleteComment(post.id, commentId)}
               />
             </motion.div>

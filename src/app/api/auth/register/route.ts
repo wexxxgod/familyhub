@@ -2,9 +2,16 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { logError, jsonError, Role } from "@/lib/auth-helpers";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   try {
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || "unknown";
+    const { allowed } = checkRateLimit(`register:${ip}`, 3, 60000);
+    if (!allowed) {
+      return NextResponse.json({ error: "Слишком много попыток. Попробуйте позже." }, { status: 429 });
+    }
+
     const { name, email, password } = await req.json();
 
     if (!name || !email || !password) {

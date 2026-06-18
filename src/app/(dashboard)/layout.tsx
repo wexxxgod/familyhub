@@ -3,6 +3,7 @@ import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { FamilyGuard } from "@/components/layout/FamilyGuard";
 import { Toaster } from "react-hot-toast";
+import { ServiceWorkerRegister } from "@/components/shared/ServiceWorkerRegister";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -11,6 +12,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         duration: 3000,
         style: { borderRadius: "12px", background: "var(--accent)", color: "var(--foreground)", fontSize: "14px" },
       }} />
+      <ServiceWorkerRegister />
       <FamilyGuard>
         <Sidebar />
         <div className="lg:pl-[240px]">

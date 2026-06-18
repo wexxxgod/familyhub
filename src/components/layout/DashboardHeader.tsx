@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useRouter } from "next/navigation";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
-import { getInitials, getAvatarColor } from "@/lib/utils";
+import { GradientAvatar } from "@/components/shared/GradientAvatar";
 import { useStore } from "@/store";
 import { api } from "@/lib/api";
 
@@ -141,13 +141,7 @@ export function DashboardHeader() {
 
           <div className="relative">
             <button aria-label="Меню пользователя" onClick={() => setMenuOpen(!menuOpen)} className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-accent transition-colors">
-              {sessionUser?.image ? (
-                <img src={sessionUser?.image} alt="" className="w-8 h-8 rounded-xl object-cover" />
-              ) : (
-                <div className={`w-8 h-8 rounded-xl bg-gradient-to-br ${getAvatarColor(sessionUser?.name || "User")} flex items-center justify-center text-white font-bold text-sm`}>
-                  {getInitials(sessionUser?.name || "U")}
-                </div>
-              )}
+              <GradientAvatar name={sessionUser?.name} image={sessionUser?.image} size="md" className="!w-8 !h-8" />
             </button>
 
             {menuOpen && (

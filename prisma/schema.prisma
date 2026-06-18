@@ -82,6 +82,7 @@ model User {
   memories      Memory[]
   polls         Poll[]
   activityLogs  ActivityLog[]
+  pets          Pet[]
 
   @@index([familyId])
   @@map("users")
@@ -305,4 +306,22 @@ model ActivityLog {
   user   User   @relation(fields: [userId], references: [id])
 
   @@map("activity_logs")
+}
+
+model Pet {
+  id         String   @id @default(cuid())
+  name       String
+  species    String
+  breed      String?
+  dateOfBirth DateTime?
+  photo      String?
+  notes      String?
+  createdAt  DateTime @default(now())
+
+  ownerId  String
+  owner    User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  familyId String
+
+  @@index([familyId])
+  @@map("pets")
 }

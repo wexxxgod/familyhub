@@ -61,6 +61,31 @@ export async function POST(req: NextRequest) {
   }
 }
 
+export async function PATCH(req: NextRequest) {
+  try {
+    const user = await getCurrentUser(req);
+    if (!user) return jsonError("Unauthorized", 401);
+    const { id, content, tags } = await req.json();
+    const post = await prisma.post.findUnique({ where: { id } });
+    if (!post) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (post.authorId !== user.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+    const updated = await prisma.post.update({
+      where: { id },
+      data: {
+        ...(content !== undefined && { content }),
+        ...(tags !== undefined && { tags }),
+      },
+      include: { author: true, comments: { include: { author: true } }, likes: true },
+    });
+    return NextResponse.json(updated);
+  } catch (error) {
+    logError("posts_PATCH", error);
+    return jsonError("Failed to update post", 500);
+  }
+}
+
 export async function DELETE(req: NextRequest) {
   try {
     const user = await getCurrentUser(req);

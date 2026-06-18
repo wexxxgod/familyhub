@@ -5,6 +5,7 @@ import { formatRelativeDate, formatNumber } from "@/lib/utils";
 import { ImageViewer } from "@/components/shared/ImageViewer";
 import { GradientAvatar } from "@/components/shared/GradientAvatar";
 import { DeleteButton } from "@/components/shared/DeleteButton";
+import toast from "react-hot-toast";
 
 interface PostCardProps {
   post: any;
@@ -14,16 +15,43 @@ interface PostCardProps {
   onComment: (content: string) => Promise<void>;
   onDelete?: (id: string) => void;
   onDeleteComment?: (commentId: string) => void;
+  onEdit?: (id: string, data: { content: string; tags?: string[] }) => Promise<void>;
 }
 
-export function PostCard({ post, currentUserId, currentUserRole, onToggleLike, onComment, onDelete, onDeleteComment }: PostCardProps) {
+export function PostCard({ post, currentUserId, currentUserRole, onToggleLike, onComment, onDelete, onDeleteComment, onEdit }: PostCardProps) {
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [sending, setSending] = useState(false);
   const [viewImage, setViewImage] = useState<string | null>(null);
   const [likeAnim, setLikeAnim] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editContent, setEditContent] = useState(post.content || "");
+  const [editTags, setEditTags] = useState(post.tags?.join(", ") || "");
+  const [editSaving, setEditSaving] = useState(false);
 
   const canDelete = currentUserId && (post.authorId === currentUserId || post.author?.id === currentUserId || currentUserRole === "PARENT");
+  const canEdit = currentUserId && (post.authorId === currentUserId || post.author?.id === currentUserId);
+
+  const handleSaveEdit = async () => {
+    if (!editContent.trim() || editSaving || !onEdit) return;
+    setEditSaving(true);
+    try {
+      const tags = editTags.split(",").map((t: string) => t.trim()).filter(Boolean);
+      await onEdit(post.id, { content: editContent.trim(), tags: tags.length ? tags : undefined });
+      setEditing(false);
+      toast.success("Пост обновлён");
+    } catch {
+      toast.error("Ошибка при обновлении");
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditContent(post.content || "");
+    setEditTags(post.tags?.join(", ") || "");
+    setEditing(false);
+  };
 
   const handleComment = async () => {
     if (!commentText.trim() || sending) return;
@@ -39,6 +67,14 @@ export function PostCard({ post, currentUserId, currentUserRole, onToggleLike, o
         {canDelete && onDelete && (
           <DeleteButton onClick={() => onDelete(post.id)} className="z-10 top-3 right-3" />
         )}
+        {canEdit && onEdit && (
+          <button onClick={() => setEditing(!editing)} className="absolute top-3 right-14 z-10 p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors" aria-label="Редактировать">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
+          </button>
+        )}
         <div className="flex items-center gap-3 p-4 pb-0">
           <GradientAvatar name={post.author?.name} image={post.author?.image} size="md" />
           
@@ -49,13 +85,26 @@ export function PostCard({ post, currentUserId, currentUserRole, onToggleLike, o
         </div>
 
         <div className="p-4">
-          <p className="text-sm leading-relaxed whitespace-pre-wrap">{post.content}</p>
-          {post.tags?.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-3">
-              {post.tags.map((tag: string) => (
-                <span key={tag} className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium">#{tag}</span>
-              ))}
+          {editing ? (
+            <div className="space-y-3">
+              <textarea value={editContent} onChange={(e) => setEditContent(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-accent outline-none text-sm resize-none min-h-[100px]" placeholder="Текст поста..." />
+              <input type="text" value={editTags} onChange={(e) => setEditTags(e.target.value)} className="w-full px-4 py-2 rounded-xl bg-accent outline-none text-sm" placeholder="Теги через запятую" />
+              <div className="flex gap-2">
+                <button onClick={handleSaveEdit} disabled={!editContent.trim() || editSaving} className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50">Сохранить</button>
+                <button onClick={handleCancelEdit} className="px-4 py-2 rounded-xl bg-accent text-sm font-medium">Отмена</button>
+              </div>
             </div>
+          ) : (
+            <>
+              <p className="text-sm leading-relaxed whitespace-pre-wrap">{post.content}</p>
+              {post.tags?.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-3">
+                  {post.tags.map((tag: string) => (
+                    <span key={tag} className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium">#{tag}</span>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
 

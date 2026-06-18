@@ -16,6 +16,7 @@ export const api = {
   posts: {
     list: () => request<any[]>("/api/posts"),
     create: (data: any) => request<any>("/api/posts", { method: "POST", body: JSON.stringify(data) }),
+    update: (id: string, data: any) => request<any>("/api/posts", { method: "PATCH", body: JSON.stringify({ id, ...data }) }),
     delete: (id: string) => request<any>("/api/posts", { method: "DELETE", body: JSON.stringify({ id }) }),
   },
   likes: {
@@ -51,7 +52,14 @@ export const api = {
   calendar: {
     list: () => request<any[]>("/api/events"),
     create: (data: any) => request<any>("/api/events", { method: "POST", body: JSON.stringify(data) }),
+    update: (id: string, data: any) => request<any>("/api/events", { method: "PATCH", body: JSON.stringify({ id, ...data }) }),
     delete: (id: string) => request<any>("/api/events", { method: "DELETE", body: JSON.stringify({ id }) }),
+  },
+  auth: {
+    changePassword: (currentPassword: string, newPassword: string) =>
+      request<{ success: boolean }>("/api/auth/change-password", { method: "POST", body: JSON.stringify({ currentPassword, newPassword }) }),
+    changeEmail: (newEmail: string, password: string) =>
+      request<{ user: any }>("/api/auth/change-email", { method: "POST", body: JSON.stringify({ newEmail, password }) }),
   },
   profile: {
     get: () => request<any>("/api/profile"),
@@ -63,10 +71,16 @@ export const api = {
     join: (data: { inviteCode: string }) => request<{ family: any }>("/api/family/join", { method: "POST", body: JSON.stringify(data) }),
     regenerateCode: () => request<{ inviteCode: string }>("/api/family", { method: "PATCH" }),
     removeMember: (userId: string) => request<any>("/api/family", { method: "DELETE", body: JSON.stringify({ userId }) }),
+    leave: () => request<{ success: boolean }>("/api/family/leave", { method: "POST" }),
   },
   familyTree: {
     list: () => request<any[]>("/api/family-tree"),
     create: (data: any) => request<any>("/api/family-tree", { method: "POST", body: JSON.stringify(data) }),
+  },
+  pets: {
+    list: () => request<any[]>("/api/pets"),
+    create: (data: any) => request<any>("/api/pets", { method: "POST", body: JSON.stringify(data) }),
+    delete: (id: string) => request<any>("/api/pets", { method: "DELETE", body: JSON.stringify({ id }) }),
   },
   members: {
     list: () => request<any[]>("/api/members"),

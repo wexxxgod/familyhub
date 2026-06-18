@@ -17,6 +17,11 @@ export default function MemberPage() {
   const [stats, setStats] = useState({ posts: 0, comments: 0, likes: 0 });
   const [uploading, setUploading] = useState(false);
   const [removing, setRemoving] = useState<string | null>(null);
+  const [passwordForm, setPasswordForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
+  const [pwSaving, setPwSaving] = useState(false);
+  const [emailForm, setEmailForm] = useState({ newEmail: "", password: "" });
+  const [emailSaving, setEmailSaving] = useState(false);
+  const [leavingFamily, setLeavingFamily] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleRemoveMember = async (userId: string, userName: string) => {
@@ -33,6 +38,65 @@ export default function MemberPage() {
       toast.error("Ошибка при удалении");
     }
     setRemoving(null);
+  };
+
+  const handlePasswordChange = async () => {
+    if (!passwordForm.currentPassword || !passwordForm.newPassword) {
+      toast.error("Заполните все поля");
+      return;
+    }
+    if (passwordForm.newPassword.length < 6) {
+      toast.error("Новый пароль должен быть не менее 6 символов");
+      return;
+    }
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      toast.error("Пароли не совпадают");
+      return;
+    }
+    setPwSaving(true);
+    try {
+      await api.auth.changePassword(passwordForm.currentPassword, passwordForm.newPassword);
+      toast.success("Пароль изменён");
+      setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    } catch (e: any) {
+      toast.error(e.message || "Ошибка при смене пароля");
+    }
+    setPwSaving(false);
+  };
+
+  const handleEmailChange = async () => {
+    if (!emailForm.newEmail || !emailForm.newEmail.includes("@")) {
+      toast.error("Введите корректный email");
+      return;
+    }
+    if (!emailForm.password) {
+      toast.error("Введите пароль");
+      return;
+    }
+    setEmailSaving(true);
+    try {
+      await api.auth.changeEmail(emailForm.newEmail, emailForm.password);
+      toast.success("Email изменён");
+      setEmailForm({ newEmail: "", password: "" });
+      await refresh();
+    } catch (e: any) {
+      toast.error(e.message || "Ошибка при смене email");
+    }
+    setEmailSaving(false);
+  };
+
+  const handleLeaveFamily = async () => {
+    if (!confirm("Вы уверены, что хотите покинуть семью? Это действие нельзя отменить.")) return;
+    setLeavingFamily(true);
+    try {
+      await api.family.leave();
+      setFamilyInfo(null);
+      toast.success("Вы покинули семью");
+      await refresh();
+    } catch (e: any) {
+      toast.error(e.message || "Ошибка при выходе из семьи");
+    }
+    setLeavingFamily(false);
   };
 
   useEffect(() => {
@@ -168,6 +232,69 @@ export default function MemberPage() {
               {saving ? "Сохранение..." : "Сохранить"}
             </button>
           </div>
+
+          <div className="mt-6 pt-6 border-t border-border/50">
+            <h3 className="font-semibold mb-4">Сменить пароль</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1">Текущий пароль</label>
+                <input
+                  type="password"
+                  value={passwordForm.currentPassword}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-xl bg-accent outline-none text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1">Новый пароль</label>
+                <input
+                  type="password"
+                  value={passwordForm.newPassword}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-xl bg-accent outline-none text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1">Подтверждение</label>
+                <input
+                  type="password"
+                  value={passwordForm.confirmPassword}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-xl bg-accent outline-none text-sm"
+                />
+              </div>
+              <button onClick={handlePasswordChange} disabled={pwSaving} className="px-6 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-all disabled:opacity-50">
+                {pwSaving ? "Сохранение..." : "Сменить пароль"}
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-6 pt-6 border-t border-border/50">
+            <h3 className="font-semibold mb-4">Сменить email</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1">Новый email</label>
+                <input
+                  type="email"
+                  value={emailForm.newEmail}
+                  onChange={(e) => setEmailForm({ ...emailForm, newEmail: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-xl bg-accent outline-none text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1">Пароль</label>
+                <input
+                  type="password"
+                  value={emailForm.password}
+                  onChange={(e) => setEmailForm({ ...emailForm, password: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-xl bg-accent outline-none text-sm"
+                />
+              </div>
+              <button onClick={handleEmailChange} disabled={emailSaving} className="px-6 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-all disabled:opacity-50">
+                {emailSaving ? "Сохранение..." : "Сменить email"}
+              </button>
+            </div>
+          </div>
         </div>
 
         <div className="glass-card p-6">
@@ -220,6 +347,28 @@ export default function MemberPage() {
           </div>
         </div>
       </div>
+
+      {familyInfo?.family && (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-card p-5 mt-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Выход из семьи</p>
+              <p className="text-sm">Вы можете покинуть семью. Это удалит ваши уведомления и чаты.</p>
+            </div>
+            <button
+              onClick={handleLeaveFamily}
+              disabled={leavingFamily}
+              className="px-4 py-2 rounded-xl bg-red-500/10 text-red-500 font-semibold text-sm hover:bg-red-500/20 transition-all disabled:opacity-50"
+            >
+              {leavingFamily ? (
+                <div className="w-4 h-4 rounded-full border-2 border-red-500 border-t-transparent animate-spin mx-auto" />
+              ) : (
+                "Покинуть семью"
+              )}
+            </button>
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 }
