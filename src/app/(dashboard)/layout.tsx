@@ -1,9 +1,11 @@
-import { Sidebar } from "@/components/layout/Sidebar";
-import { DashboardHeader } from "@/components/layout/DashboardHeader";
-import { MobileNav } from "@/components/layout/MobileNav";
+import dynamic from "next/dynamic";
 import { FamilyGuard } from "@/components/layout/FamilyGuard";
-import { Toaster } from "react-hot-toast";
-import { ServiceWorkerRegister } from "@/components/shared/ServiceWorkerRegister";
+
+const Sidebar = dynamic(() => import("@/components/layout/Sidebar").then((m) => ({ default: m.Sidebar })), { ssr: false });
+const DashboardHeader = dynamic(() => import("@/components/layout/DashboardHeader").then((m) => ({ default: m.DashboardHeader })), { ssr: false });
+const MobileNav = dynamic(() => import("@/components/layout/MobileNav").then((m) => ({ default: m.MobileNav })), { ssr: false });
+const Toaster = dynamic(() => import("react-hot-toast").then((m) => ({ default: m.Toaster })));
+const ServiceWorkerRegister = dynamic(() => import("@/components/shared/ServiceWorkerRegister").then((m) => ({ default: m.ServiceWorkerRegister })), { ssr: false });
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (

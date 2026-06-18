@@ -19,6 +19,7 @@ export function FamilyGuard({ children }: { children: React.ReactNode }) {
     startedRef.current = true;
     let cancelled = false;
     let retries = 0;
+    const fallbackTimer = setTimeout(() => { if (!cancelled) setReady(true); }, 3000);
 
     async function check() {
       try {
@@ -40,7 +41,7 @@ export function FamilyGuard({ children }: { children: React.ReactNode }) {
         if (cancelled) return;
         retries++;
         if (retries >= 15) {
-          window.location.href = "/login";
+          setReady(true);
         } else {
           setTimeout(check, Math.min(1000 * Math.pow(1.5, retries - 1), 10000));
         }
@@ -48,7 +49,7 @@ export function FamilyGuard({ children }: { children: React.ReactNode }) {
     }
 
     check();
-    return () => { cancelled = true; };
+    return () => { cancelled = true; clearTimeout(fallbackTimer); };
   }, [pathname, router]);
 
   if (!ready) {

@@ -5,6 +5,9 @@ const nextConfig = {
       { protocol: "https", hostname: "**" },
     ],
   },
+  experimental: {
+    optimizePackageImports: ["framer-motion"],
+  },
 };
 
 module.exports = nextConfig;

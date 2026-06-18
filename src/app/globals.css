@@ -2,8 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800&family=Fredoka:wght@400;500;600;700&display=swap');
-
 @layer base {
   :root {
     --background: 38 50% 97%;
@@ -67,8 +65,11 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Nunito', sans-serif;
-    transition: background-color 0.3s ease, color 0.3s ease;
+    font-family: var(--font-nunito), sans-serif;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-fredoka), sans-serif;
+    font-weight: 600;
   }
   body::before {
     content: '';
@@ -84,10 +85,7 @@
   .dark body::before {
     opacity: 0.08;
   }
-  h1, h2, h3, h4, h5, h6 {
-    font-family: 'Fredoka', sans-serif;
-    font-weight: 600;
-  }
+
   input, textarea, select {
     transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
   }
@@ -419,10 +417,8 @@
 }
 
 /* Smooth theme transition */
-*,
-*::before,
-*::after {
-  transition-property: background-color, border-color, color;
+body {
+  transition-property: background-color, color;
   transition-duration: 0.15s;
   transition-timing-function: ease;
 }
