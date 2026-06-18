@@ -1,17 +1,21 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, logError, jsonError, safeInt, safeDate, Role } from "@/lib/auth-helpers";
+import { getCurrentUser, logError, jsonError } from "@/lib/auth-helpers";
 
 export async function GET(req: NextRequest) {
   try {
     const user = await getCurrentUser(req);
     if (!user) return jsonError("Unauthorized", 401);
+    if (!user.familyId) return jsonError("Family not found", 404);
+
+    const familyUserIds = await prisma.user.findMany({
+      where: { familyId: user.familyId },
+      select: { id: true },
+    });
 
     const messages = await prisma.message.findMany({
-      where: {
-        OR: [{ senderId: user.id }, { receiverId: user.id }],
-      },
-      include: { sender: true, receiver: true },
+      where: { senderId: { in: familyUserIds.map((u) => u.id) } },
+      include: { sender: true },
       orderBy: { createdAt: "desc" },
       take: 50,
     });
@@ -27,26 +31,16 @@ export async function POST(req: NextRequest) {
   try {
     const user = await getCurrentUser(req);
     if (!user) return jsonError("Unauthorized", 401);
+    if (!user.familyId) return jsonError("Family not found", 404);
 
-    const { content, receiverId, chatRoomId } = await req.json();
+    const { content } = await req.json();
 
-    if (receiverId) {
-      const receiver = await prisma.user.findUnique({
-        where: { id: receiverId },
-        select: { familyId: true },
-      });
-      if (!receiver || receiver.familyId !== user.familyId) {
-        return NextResponse.json({ error: "Нельзя отправить сообщение пользователю из другой семьи" }, { status: 403 });
-      }
+    if (!content?.trim()) {
+      return NextResponse.json({ error: "Сообщение не может быть пустым" }, { status: 400 });
     }
 
     const message = await prisma.message.create({
-      data: {
-        content,
-        senderId: user.id,
-        receiverId,
-        chatRoomId,
-      },
+      data: { content: content.trim(), senderId: user.id },
       include: { sender: true },
     });
 
