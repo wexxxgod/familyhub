@@ -200,26 +200,17 @@ export function DashboardHeader() {
         <>
           <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden" onClick={() => setDrawerOpen(false)} />
           <div className="fixed top-0 left-0 bottom-0 w-[280px] z-50 glass-sidebar shadow-2xl lg:hidden animate-drawer-in overflow-y-auto flex flex-col">
-            <div className="p-5 border-b border-border/40 flex items-center justify-between shrink-0">
-              <Link href="/feed" className="flex items-center gap-3" onClick={() => setDrawerOpen(false)}>
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-lg">
-                  <span className="text-white font-bold text-base">🏠</span>
-                </div>
-                <span className="font-semibold text-base text-gradient font-['Fredoka']">FamilyHub</span>
-              </Link>
-              <button aria-label="Закрыть меню" onClick={() => setDrawerOpen(false)} className="p-2.5 rounded-full hover:bg-white/40 dark:hover:bg-white/5 transition-all">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-              </button>
-            </div>
-
             {sessionUser && (
-              <div className="p-4 border-b border-border/40 shrink-0">
+              <div className="p-4 shrink-0">
                 <div className="flex items-center gap-3 mb-3">
                   <GradientAvatar name={sessionUser.name} image={sessionUser.image} size="md" className="!w-10 !h-10 shrink-0" />
                   <div className="min-w-0 flex-1">
                     <p className="font-medium text-sm truncate">{sessionUser.name}</p>
                     <p className="text-xs text-muted-foreground truncate">{sessionUser.email}</p>
                   </div>
+                  <button aria-label="Закрыть меню" onClick={() => setDrawerOpen(false)} className="p-2 rounded-full hover:bg-white/40 dark:hover:bg-white/5 transition-all shrink-0">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                  </button>
                 </div>
                 <Link
                   href="/member"
