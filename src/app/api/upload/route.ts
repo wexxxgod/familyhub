@@ -1,15 +1,19 @@
 import { NextResponse, NextRequest } from "next/server";
 import { getCurrentUser, logError, jsonError } from "@/lib/auth-helpers";
 
-const ALLOWED_TYPES = [
+const ALLOWED_TYPES_SET = new Set([
   "image/jpeg", "image/png", "image/webp", "image/gif", "image/bmp", "image/svg+xml",
-  "audio/mpeg", "audio/wav", "audio/ogg", "audio/mp4", "audio/webm", "audio/aac", "audio/flac",
+  "audio/mpeg", "audio/mp3", "audio/wav", "audio/x-wav", "audio/ogg", "audio/mp4", "audio/webm", "audio/aac", "audio/flac", "audio/x-m4a", "audio/x-flac", "audio/3gpp", "audio/x-ms-wma",
   "video/mp4", "video/webm", "video/ogg", "video/quicktime",
   "application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   "application/zip", "application/x-rar-compressed", "application/x-7z-compressed",
   "text/plain", "text/csv",
-];
+]);
+
+function normalizeMimeType(raw: string): string {
+  return raw.split(";")[0].trim().toLowerCase();
+}
 
 const MAX_SIZE = 50 * 1024 * 1024;
 
@@ -26,13 +30,13 @@ export async function POST(req: NextRequest) {
     if (file.size > MAX_SIZE)
       return NextResponse.json({ error: "File too large (max 50MB)" }, { status: 400 });
 
-    if (!ALLOWED_TYPES.includes(file.type))
+    let mimeType = normalizeMimeType(file.type);
+    if (!ALLOWED_TYPES_SET.has(mimeType))
       return NextResponse.json({ error: "Invalid file type" }, { status: 400 });
 
     let buffer = Buffer.from(await file.arrayBuffer());
 
-    let mimeType = file.type;
-    if (file.type.startsWith("image/") && file.type !== "image/svg+xml") {
+    if (mimeType.startsWith("image/") && mimeType !== "image/svg+xml") {
       try {
         const sharp = (await import("sharp")).default;
         const compressed = await sharp(buffer)

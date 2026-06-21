@@ -97,7 +97,7 @@ export default function ChatPage() {
       setMessages((prev) => [...prev, { ...msg, sender: { id: currentUserId, name: user?.name } }]);
       setInput("");
       clearFile();
-    } catch { toast.error("Ошибка при отправке"); }
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Ошибка при отправке"); }
     setSending(false);
   };
 

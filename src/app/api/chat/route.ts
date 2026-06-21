@@ -44,11 +44,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Сообщение не может быть пустым" }, { status: 400 });
     }
 
+    const cleanFileType = fileType ? fileType.split(";")[0].trim().toLowerCase() : "application/octet-stream";
+
     const message = await prisma.message.create({
       data: {
         content: content?.trim() || "",
         image: image || null,
-        file: file ? JSON.stringify({ url: file, name: fileName || "file", type: fileType || "application/octet-stream" }) : null,
+        file: file ? JSON.stringify({ url: file, name: fileName || "file", type: cleanFileType }) : null,
         senderId: user.id,
       },
       include: { sender: true },
