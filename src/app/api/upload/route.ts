@@ -28,8 +28,9 @@ export async function POST(req: NextRequest) {
         buffer = Buffer.from(compressed);
       } catch {}
     }
+    const mimeType = file.type || "image/jpeg";
     const base64 = buffer.toString("base64");
-    const dataUrl = `data:image/jpeg;base64,${base64}`;
+    const dataUrl = `data:${mimeType};base64,${base64}`;
 
     return NextResponse.json({ url: dataUrl, name: file.name, size: buffer.length });
   } catch (error) {

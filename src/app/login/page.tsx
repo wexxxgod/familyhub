@@ -148,7 +148,7 @@ function LoginForm({ onBack }: { onBack: () => void }) {
         window.location.href = "/feed";
       } else {
         const data = await res.json();
-        setError(data.error === "invalid credentials" ? "Неверный email или пароль" : "Ошибка входа. Попробуйте позже.");
+        setError(data.error || "Ошибка входа. Попробуйте позже.");
       }
     } catch {
       setError("Ошибка сети. Попробуйте позже.");
@@ -279,6 +279,7 @@ function CreateFamilyForm({ onBack }: { onBack: () => void }) {
       if (!familyRes.ok) {
         const data = await familyRes.json();
         setError(data.error || "Ошибка создания семьи");
+        setStep("register");
         return;
       }
 
@@ -471,6 +472,7 @@ function JoinFamilyForm({ onBack }: { onBack: () => void }) {
       if (!joinRes.ok) {
         const data = await joinRes.json();
         setError(data.error || "Ошибка при вступлении в семью");
+        setStep("register");
         return;
       }
 

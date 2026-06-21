@@ -58,7 +58,7 @@ export async function PATCH(req: NextRequest) {
       where: { id },
       data: {
         ...(title !== undefined && { title }),
-        ...(date !== undefined && { date: safeDate(date)! }),
+        ...(date !== undefined && { date: safeDate(date) ?? undefined }),
         ...(type !== undefined && { type }),
         ...(description !== undefined && { description }),
       },

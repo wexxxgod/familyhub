@@ -24,6 +24,14 @@ export default function RegisterPage() {
       setError("Пароль должен быть не менее 6 символов");
       return;
     }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      setError("Некорректный формат email");
+      return;
+    }
+    if (form.name.trim().length < 2) {
+      setError("Имя должно быть не менее 2 символов");
+      return;
+    }
 
     setLoading(true);
     try {

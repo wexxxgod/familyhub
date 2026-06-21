@@ -1,10 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { logError, jsonError, Role } from "@/lib/auth-helpers";
+import { logError, jsonError, Role, isValidEmail } from "@/lib/auth-helpers";
 import { checkRateLimit } from "@/lib/rate-limit";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || "unknown";
     const { allowed } = checkRateLimit(`register:${ip}`, 3, 60000);
@@ -16,6 +16,14 @@ export async function POST(req: Request) {
 
     if (!name || !email || !password) {
       return NextResponse.json({ error: "Все поля обязательны" }, { status: 400 });
+    }
+
+    if (typeof name !== "string" || name.trim().length < 2) {
+      return NextResponse.json({ error: "Имя должно быть не менее 2 символов" }, { status: 400 });
+    }
+
+    if (!isValidEmail(email)) {
+      return NextResponse.json({ error: "Некорректный формат email" }, { status: 400 });
     }
 
     if (password.length < 6) {

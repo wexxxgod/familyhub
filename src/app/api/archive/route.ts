@@ -62,7 +62,7 @@ export async function PATCH(req: NextRequest) {
         ...(data.url !== undefined && { url: data.url }),
         ...(data.images !== undefined && { images: data.images }),
         ...(data.category !== undefined && { category: data.category }),
-        ...(data.year !== undefined && { year: data.year ? safeInt(data.year) : null }),
+        ...(data.year !== undefined && { year: data.year !== null && data.year !== "" ? safeInt(data.year) : null }),
         ...(data.tags !== undefined && { tags: data.tags }),
       },
     });

@@ -24,16 +24,37 @@ Cookie-based сессия (`familyhub.session`), `getCurrentUser` helper из `a
 - `scripts/migrate-images.ts` — скрипт конвертации base64→файлы
 - `public/uploads/` — временная директория
 
-### Что починено (текущий фикс)
+### Фикс 1 — Миграция Neon (commit 32c9170)
 - `vercel-build` скрипт: `prisma generate && prisma db push && next build`
 - Используется `db push` вместо `migrate deploy` (нет базовой миграции, только db push изначально)
 - `directUrl = env("DIRECT_URL")` в Prisma schema — на Vercel нужно установить `DIRECT_URL` (непулерное соединение для DDL)
 - `.env` и `.env.example` обновлены: добавлена `DIRECT_URL`
 
-## Проблемы
+### Фикс 2 — Mobile overflow (commit b63a414)
+- `DashboardHeader.tsx`: search container `hidden sm:block`
+- dashboard layout: `overflow-x-hidden`
+- `globals.css`: `html { max-width: 100vw; overflow-x: hidden }`
+- Блобы скрыты на мобилках (`max-lg:hidden`), размеры ограничены `min()`
+
+### Фикс 3 — Аудит и багфикс всего codebase (не закоммичен)
+- **`auth-helpers.ts`**: добавлена `isValidEmail()` для единой валидации
+- **`login/route.ts`**: email-валидация + русские ошибки
+- **`register/route.ts`**: email-валидация, проверка длины имени, `NextRequest`
+- **`register/page.tsx`**: клиентская валидация email + длина имени
+- **`login/page.tsx`**: сброс `step` на `"register"` при ошибке создания/вступления в семью; показ серверной ошибки вместо сверки с `"invalid credentials"`
+- **`upload/route.ts`**: MIME type берется из `file.type`, а не хардкод `image/jpeg` (PDF работают)
+- **`polls/vote/route.ts`**: проверка семейной принадлежности опроса (`poll.author.familyId === user.familyId`) + валидация варианта
+- **`events/route.ts`**: `safeDate(date)!` → `safeDate(date) ?? undefined` (без падения на null)
+- **`archive/route.ts`**: year 0 больше не трактуется как falsy (`data.year !== null && data.year !== ""`)
+- **`notifications/public-key/route.ts`**: try/catch + проверка на null ключа
+
+## Проблемы (оставшиеся)
 - **Neon заблокирован в регионе** — локально миграции и скрипты не запустить
-- **base64 изображения** — хранятся в БД, из-за этого лента может грузиться медленно на телефоне (особенно при множественных фото)
-- **Решение для скорости** — не реализовано. Лучший вариант: Cloudinary (бесплатно 25GB), но пользователь пока не хочет усложнять
+- **base64 изображения** — хранятся в БД, лента может грузиться медленно на телефоне
+- **Rate limiting in-memory** — сброс при каждом serverless invocation на Vercel (нужен внешний storage)
+- **`posts/route.ts` cursor pagination** — если пост до cursor удалён, `findMany` с `skip: 1` может пропустить следующий
+- **`admin/route.ts` delete_user** — нет проверки family scope
+- **`admin/route.ts` change_role** — нет валидации значения роли
 
 ## Команды для будущего
 ```bash

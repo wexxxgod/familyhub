@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { createSessionToken, setSessionCookie, logError, jsonError } from "@/lib/auth-helpers";
+import { createSessionToken, setSessionCookie, logError, jsonError, isValidEmail } from "@/lib/auth-helpers";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
@@ -14,7 +14,11 @@ export async function POST(req: NextRequest) {
 
     const { email, password } = await req.json();
     if (!email || !password) {
-      return NextResponse.json({ error: "missing fields" }, { status: 400 });
+      return NextResponse.json({ error: "Email и пароль обязательны" }, { status: 400 });
+    }
+
+    if (!isValidEmail(email)) {
+      return NextResponse.json({ error: "Некорректный формат email" }, { status: 400 });
     }
 
     const user = await prisma.user.findUnique({ where: { email } });

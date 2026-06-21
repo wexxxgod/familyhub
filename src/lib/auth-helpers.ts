@@ -26,6 +26,11 @@ export function safeDate(value: unknown): Date | null {
   return isNaN(d.getTime()) ? null : d;
 }
 
+export function isValidEmail(email: unknown): email is string {
+  if (typeof email !== "string") return false;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
 export function hasFamilyScope(itemFamilyId: string | null | undefined, userFamilyId: string | null | undefined): boolean {
   if (!itemFamilyId || !userFamilyId) return false;
   return itemFamilyId === userFamilyId;
