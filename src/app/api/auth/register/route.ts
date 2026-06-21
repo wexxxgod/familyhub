@@ -1,10 +1,8 @@
 import { NextResponse, NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
-import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { logError, jsonError, Role, isValidEmail } from "@/lib/auth-helpers";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { sendVerificationEmail } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   try {
@@ -38,25 +36,16 @@ export async function POST(req: NextRequest) {
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
-    const hasEmailKey = !!process.env.RESEND_API_KEY;
-    const verificationToken = hasEmailKey ? crypto.randomUUID() : null;
 
     const user = await prisma.user.create({
       data: {
         name,
         email,
         passwordHash,
-        verificationToken,
-        emailVerified: !hasEmailKey,
+        emailVerified: true,
         role: Role.FAMILY_MEMBER,
       },
     });
-
-    if (hasEmailKey) {
-      sendVerificationEmail(email, verificationToken!).catch((err) =>
-        logError("register_send_verification", err),
-      );
-    }
 
     return NextResponse.json({
       id: user.id,
