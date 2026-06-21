@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireRole, logError, jsonError, safeInt, safeDate, Role } from "@/lib/auth-helpers";
+import { requireAuth, requireRole, logError, jsonError, safeInt, safeDate, Role } from "@/lib/auth-helpers";
 
 export async function GET(req: NextRequest) {
   try {
@@ -30,8 +30,12 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await requireRole(["SUPER_ADMIN"], req);
+    const user = await requireAuth(req);
     const { action, data } = await req.json();
+
+    if (action === "delete_user" || action === "change_role") {
+      if (user.role !== "SUPER_ADMIN") return jsonError("Forbidden", 403);
+    }
 
     if (action === "delete_user") {
       await prisma.user.delete({ where: { id: data.userId } });
@@ -44,6 +48,29 @@ export async function POST(req: NextRequest) {
         data: { role: data.role },
       });
       return NextResponse.json({ success: true });
+    }
+
+    if (action === "clear_all") {
+      await prisma.petPhoto.deleteMany();
+      await prisma.pet.deleteMany();
+      await prisma.familyMember.deleteMany();
+      await prisma.pollVote.deleteMany();
+      await prisma.poll.deleteMany();
+      await prisma.activityLog.deleteMany();
+      await prisma.memory.deleteMany();
+      await prisma.archiveItem.deleteMany();
+      await prisma.event.deleteMany();
+      await prisma.pushSubscription.deleteMany();
+      await prisma.notification.deleteMany();
+      await prisma.chatRoomMember.deleteMany();
+      await prisma.message.deleteMany();
+      await prisma.chatRoom.deleteMany();
+      await prisma.like.deleteMany();
+      await prisma.comment.deleteMany();
+      await prisma.post.deleteMany();
+      await prisma.user.deleteMany();
+      await prisma.family.deleteMany();
+      return NextResponse.json({ success: true, message: "All data cleared" });
     }
 
     return NextResponse.json({ error: "Unknown action" }, { status: 400 });
