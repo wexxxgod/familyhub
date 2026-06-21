@@ -31,6 +31,7 @@ export async function POST(req: NextRequest) {
 
     let buffer = Buffer.from(await file.arrayBuffer());
 
+    let mimeType = file.type;
     if (file.type.startsWith("image/") && file.type !== "image/svg+xml") {
       try {
         const sharp = (await import("sharp")).default;
@@ -39,10 +40,10 @@ export async function POST(req: NextRequest) {
           .jpeg({ quality: 80 })
           .toBuffer();
         buffer = Buffer.from(compressed);
+        mimeType = "image/jpeg";
       } catch {}
     }
 
-    const mimeType = file.type;
     const base64 = buffer.toString("base64");
     const dataUrl = `data:${mimeType};base64,${base64}`;
 
