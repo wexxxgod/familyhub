@@ -20,7 +20,12 @@ export async function GET(req: NextRequest) {
       take: 50,
     });
 
-    return NextResponse.json(messages);
+    const parsed = messages.map((m) => ({
+      ...m,
+      file: m.file ? JSON.parse(m.file) : null,
+    }));
+
+    return NextResponse.json(parsed);
   } catch (error) {
     logError("get_messages", error);
     return jsonError("Failed to fetch messages", 500);
@@ -33,18 +38,25 @@ export async function POST(req: NextRequest) {
     if (!user) return jsonError("Unauthorized", 401);
     if (!user.familyId) return jsonError("Family not found", 404);
 
-    const { content } = await req.json();
+    const { content, image, file, fileName, fileType } = await req.json();
 
-    if (!content?.trim()) {
+    if (!content?.trim() && !image && !file) {
       return NextResponse.json({ error: "Сообщение не может быть пустым" }, { status: 400 });
     }
 
     const message = await prisma.message.create({
-      data: { content: content.trim(), senderId: user.id },
+      data: {
+        content: content?.trim() || "",
+        image: image || null,
+        file: file ? JSON.stringify({ url: file, name: fileName || "file", type: fileType || "application/octet-stream" }) : null,
+        senderId: user.id,
+      },
       include: { sender: true },
     });
 
-    return NextResponse.json(message);
+    const parsed = message.file ? { ...message, file: JSON.parse(message.file) } : message;
+
+    return NextResponse.json(parsed);
   } catch (error) {
     logError("send_message", error);
     return jsonError("Failed to send message", 500);

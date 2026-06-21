@@ -33,7 +33,7 @@ export const api = {
   },
   chat: {
     list: () => request<any[]>("/api/chat"),
-    send: (data: { content: string; receiverId?: string; chatRoomId?: string }) => request<any>("/api/chat", { method: "POST", body: JSON.stringify(data) }),
+    send: (data: any) => request<any>("/api/chat", { method: "POST", body: JSON.stringify(data) }),
   },
   admin: {
     stats: () => request<any>("/api/admin"),
