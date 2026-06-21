@@ -41,6 +41,31 @@ export async function POST(req: NextRequest) {
   }
 }
 
+export async function PATCH(req: NextRequest) {
+  try {
+    const user = await getCurrentUser(req);
+    if (!user) return jsonError("Unauthorized", 401);
+    const { id, question, options } = await req.json();
+    const poll = await prisma.poll.findUnique({ where: { id } });
+    if (!poll) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (poll.authorId !== user.id && user.role !== Role.SUPER_ADMIN) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+    const updated = await prisma.poll.update({
+      where: { id },
+      data: {
+        ...(question !== undefined && { question }),
+        ...(options !== undefined && { options }),
+      },
+      include: { votes: true, author: true },
+    });
+    return NextResponse.json(updated);
+  } catch (error) {
+    logError("polls_PATCH", error);
+    return jsonError("Failed to update poll", 500);
+  }
+}
+
 export async function DELETE(req: NextRequest) {
   try {
     const user = await getCurrentUser(req);

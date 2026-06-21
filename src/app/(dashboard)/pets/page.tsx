@@ -41,6 +41,16 @@ export default function PetsPage() {
     notes: "",
   });
 
+  const [editingPet, setEditingPet] = useState<any | null>(null);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    species: "Собака",
+    breed: "",
+    dateOfBirth: "",
+    photo: "",
+    notes: "",
+  });
+
   const [albumPet, setAlbumPet] = useState<any | null>(null);
   const [photos, setPhotos] = useState<any[]>([]);
   const [photosLoading, setPhotosLoading] = useState(false);
@@ -67,6 +77,35 @@ export default function PetsPage() {
       toast.success("Питомец добавлен");
     } catch { toast.error("Ошибка при создании"); }
     setCreating(false);
+  };
+
+  const handleOpenEdit = (pet: any) => {
+    setEditForm({
+      name: pet.name || "",
+      species: pet.species || "Собака",
+      breed: pet.breed || "",
+      dateOfBirth: pet.dateOfBirth ? pet.dateOfBirth.slice(0, 10) : "",
+      photo: pet.photo || "",
+      notes: pet.notes || "",
+    });
+    setEditingPet(pet);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editForm.name.trim() || !editingPet) return;
+    try {
+      const updated = await api.pets.update(editingPet.id, {
+        name: editForm.name,
+        species: editForm.species,
+        breed: editForm.breed || null,
+        dateOfBirth: editForm.dateOfBirth || null,
+        photo: editForm.photo || null,
+        notes: editForm.notes || null,
+      });
+      setPets(pets.map((p) => (p.id === editingPet.id ? updated : p)));
+      setEditingPet(null);
+      toast.success("Питомец обновлён");
+    } catch { toast.error("Ошибка при обновлении"); }
   };
 
   const handleDelete = async (id: string) => {
@@ -245,7 +284,19 @@ export default function PetsPage() {
               animate={{ opacity: 1, scale: 1 }}
               className="glass-card overflow-hidden relative group"
             >
-              <DeleteButton onClick={() => handleDelete(pet.id)} disabled={deletingId === pet.id} />
+              <div className="absolute top-2 right-2 flex gap-1">
+                <button
+                  onClick={() => handleOpenEdit(pet)}
+                  className="p-1.5 rounded-lg bg-white/30 dark:bg-white/10 text-muted-foreground hover:text-foreground hover:bg-white/50 dark:hover:bg-white/20 opacity-0 group-hover:opacity-100 transition-all backdrop-blur-sm"
+                  aria-label="Редактировать"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                  </svg>
+                </button>
+                <DeleteButton onClick={() => handleDelete(pet.id)} disabled={deletingId === pet.id} />
+              </div>
               <div className="h-40 bg-gradient-to-br from-amber-500/10 to-orange-500/10 flex items-center justify-center overflow-hidden">
                 {pet.photo ? (
                   <img src={pet.photo} alt={pet.name} className="w-full h-full object-cover" />
@@ -289,6 +340,46 @@ export default function PetsPage() {
           ))}
         </div>
       )}
+
+      <AnimatePresence>
+        {editingPet && (
+          <>
+            <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setEditingPet(null)} />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            >
+              <div className="glass-card w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-semibold">Редактировать питомца</h3>
+                  <button onClick={() => setEditingPet(null)} className="p-1.5 rounded-lg hover:bg-accent transition-colors">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                  </button>
+                </div>
+                <div className="space-y-4">
+                  <input type="text" placeholder="Кличка *" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} className="w-full px-4 py-2.5 rounded-xl bg-accent outline-none text-sm" />
+                  <select value={editForm.species} onChange={(e) => setEditForm({ ...editForm, species: e.target.value })} className="w-full px-4 py-2.5 rounded-xl bg-accent outline-none text-sm">
+                    {SPECIES_LIST.map((s) => (<option key={s} value={s}>{s}</option>))}
+                  </select>
+                  <input type="text" placeholder="Порода" value={editForm.breed} onChange={(e) => setEditForm({ ...editForm, breed: e.target.value })} className="w-full px-4 py-2.5 rounded-xl bg-accent outline-none text-sm" />
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">Дата рождения</label>
+                    <input type="date" value={editForm.dateOfBirth} onChange={(e) => setEditForm({ ...editForm, dateOfBirth: e.target.value })} className="w-full px-4 py-2.5 rounded-xl bg-accent outline-none text-sm" />
+                  </div>
+                  <textarea placeholder="Заметки" value={editForm.notes} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })} className="w-full px-4 py-2.5 rounded-xl bg-accent outline-none text-sm min-h-[60px]" />
+                  <FileUpload onUploadComplete={([url]) => setEditForm({ ...editForm, photo: url })} label="Загрузить фото" />
+                  <div className="flex gap-3 pt-2">
+                    <button onClick={handleSaveEdit} disabled={!editForm.name.trim()} className="px-6 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-all disabled:opacity-50">Сохранить</button>
+                    <button onClick={() => setEditingPet(null)} className="px-6 py-2.5 rounded-xl bg-accent font-semibold text-sm hover:bg-accent/80 transition-all">Отмена</button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {albumPet && (

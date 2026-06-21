@@ -41,6 +41,32 @@ export async function POST(req: NextRequest) {
   }
 }
 
+export async function PATCH(req: NextRequest) {
+  try {
+    const user = await getCurrentUser(req);
+    if (!user) return jsonError("Unauthorized", 401);
+    const { id, title, content, image, year } = await req.json();
+    const memory = await prisma.memory.findUnique({ where: { id } });
+    if (!memory) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (memory.authorId !== user.id && user.role !== Role.SUPER_ADMIN) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+    const updated = await prisma.memory.update({
+      where: { id },
+      data: {
+        ...(title !== undefined && { title }),
+        ...(content !== undefined && { content }),
+        ...(image !== undefined && { image }),
+        ...(year !== undefined && { year: year ? safeInt(year) : null }),
+      },
+    });
+    return NextResponse.json(updated);
+  } catch (error) {
+    logError("memories_PATCH", error);
+    return jsonError("Failed to update memory", 500);
+  }
+}
+
 export async function DELETE(req: NextRequest) {
   try {
     const user = await getCurrentUser(req);

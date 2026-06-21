@@ -50,6 +50,7 @@ export const api = {
   polls: {
     list: () => request<any[]>("/api/polls"),
     create: (data: any) => request<any>("/api/polls", { method: "POST", body: JSON.stringify(data) }),
+    update: (id: string, data: any) => request<any>("/api/polls", { method: "PATCH", body: JSON.stringify({ id, ...data }) }),
     delete: (id: string) => request<any>("/api/polls", { method: "DELETE", body: JSON.stringify({ id }) }),
     vote: (pollId: string, option: string) => request<any>("/api/polls/vote", { method: "POST", body: JSON.stringify({ pollId, option }) }),
   },
@@ -106,6 +107,7 @@ export const api = {
   memories: {
     list: () => request<any[]>("/api/memories"),
     create: (data: any) => request<any>("/api/memories", { method: "POST", body: JSON.stringify(data) }),
+    update: (id: string, data: any) => request<any>("/api/memories", { method: "PATCH", body: JSON.stringify({ id, ...data }) }),
     delete: (id: string) => request<any>("/api/memories", { method: "DELETE", body: JSON.stringify({ id }) }),
   },
   search: {
