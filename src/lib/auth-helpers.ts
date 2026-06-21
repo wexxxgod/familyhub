@@ -51,7 +51,7 @@ function getCookieExpires(): Date {
 }
 
 export async function createSessionToken(user: {
-  id: string; role: string; email: string; name: string | null; image: string | null; familyId: string | null;
+  id: string; role: string; email: string; name: string | null; image: string | null; familyId: string | null; emailVerified?: boolean;
 }): Promise<string | null> {
   const secret = process.env.NEXTAUTH_SECRET;
   if (!secret) return null;
@@ -126,7 +126,7 @@ export async function getCurrentUser(req?: NextRequest) {
 
     const dbUser = await prisma.user.findUnique({
       where: { id: payload.id as string },
-      select: { id: true, email: true, name: true, image: true, role: true, familyId: true },
+      select: { id: true, email: true, name: true, image: true, role: true, familyId: true, emailVerified: true },
     });
     if (!dbUser) return null;
 
@@ -137,6 +137,7 @@ export async function getCurrentUser(req?: NextRequest) {
       image: dbUser.image,
       role: dbUser.role,
       familyId: dbUser.familyId,
+      emailVerified: dbUser.emailVerified,
     };
   } catch {
     return null;

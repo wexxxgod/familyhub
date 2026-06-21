@@ -13,6 +13,7 @@ export async function GET(req: NextRequest) {
         image: user.image,
         role: user.role,
         familyId: user.familyId,
+        emailVerified: user.emailVerified,
       },
     });
   } catch (error) {

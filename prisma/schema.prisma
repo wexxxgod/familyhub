@@ -57,11 +57,13 @@ model Family {
 
 model User {
   id            String   @id @default(cuid())
-  email         String   @unique
-  name          String?
-  passwordHash  String?
-  image         String?
-  role          Role     @default(FAMILY_MEMBER)
+  email             String      @unique
+  emailVerified     Boolean     @default(false)
+  verificationToken String?
+  name              String?
+  passwordHash      String?
+  image             String?
+  role              Role        @default(FAMILY_MEMBER)
   bio           String?
   phone         String?
   dateOfBirth   DateTime?
