@@ -100,8 +100,8 @@ export function DashboardHeader() {
 
         <div className="hidden lg:block" />
 
-          <div className="relative max-w-md w-full mx-4">
-            <div className="hidden sm:block">
+          <div className="hidden sm:block relative max-w-md w-full mx-4">
+            <div>
               <svg className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
               <input
                 type="search"
@@ -112,7 +112,7 @@ export function DashboardHeader() {
                 className="w-full pl-10 pr-4 py-2.5 rounded-full bg-white/60 dark:bg-white/5 border border-border/30 outline-none text-sm focus:border-amber-300/50 transition-all"
               />
             </div>
-            <div className="hidden sm:block">
+            <div>
               {searchResults && searchQuery.trim() && (
                 <div className="absolute top-full mt-2 left-0 right-0 glass-card p-2 z-50 max-h-80 overflow-y-auto">
                   {searchResults.posts?.length > 0 && <p className="text-xs text-muted-foreground px-3 pt-2 pb-1">Посты</p>}

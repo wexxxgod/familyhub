@@ -240,25 +240,25 @@
   .dark .blob-deco {
     opacity: 0.08;
   }
-  .blob-1 {
-    width: 400px;
-    height: 400px;
+    .blob-1 {
+    width: min(400px, 60vw);
+    height: min(400px, 60vw);
     background: rgba(251,191,36,0.2);
     top: -100px;
     right: -100px;
     animation: blob-float 20s ease-in-out infinite;
   }
   .blob-2 {
-    width: 300px;
-    height: 300px;
+    width: min(300px, 50vw);
+    height: min(300px, 50vw);
     background: rgba(251,146,60,0.15);
     bottom: -50px;
     left: -50px;
     animation: blob-float 25s ease-in-out infinite reverse;
   }
   .blob-3 {
-    width: 250px;
-    height: 250px;
+    width: min(250px, 40vw);
+    height: min(250px, 40vw);
     background: rgba(245,158,11,0.12);
     top: 40%;
     left: -80px;
@@ -331,6 +331,8 @@
   html {
     overflow-wrap: break-word;
     hyphens: auto;
+    max-width: 100vw;
+    overflow-x: hidden;
   }
 }
 

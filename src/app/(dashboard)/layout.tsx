@@ -9,10 +9,10 @@ const ServiceWorkerRegister = dynamic(() => import("@/components/shared/ServiceW
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-background">
-      <div className="blob-deco blob-1" />
-      <div className="blob-deco blob-2" />
-      <div className="blob-deco blob-3" />
+    <div className="min-h-screen bg-background overflow-x-hidden">
+      <div className="blob-deco blob-1 max-lg:hidden" />
+      <div className="blob-deco blob-2 max-lg:hidden" />
+      <div className="blob-deco blob-3 max-lg:hidden" />
       <Toaster position="top-right" toastOptions={{
         duration: 3000,
         style: { borderRadius: "12px", background: "var(--accent)", color: "var(--foreground)", fontSize: "14px" },
