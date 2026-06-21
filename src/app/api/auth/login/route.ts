@@ -31,6 +31,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Неверный email или пароль" }, { status: 401 });
     }
 
+    if (!user.emailVerified) {
+      return NextResponse.json({ error: "Email не подтверждён. Проверьте почту." }, { status: 403 });
+    }
+
     const token = await createSessionToken({
       id: user.id,
       role: user.role,

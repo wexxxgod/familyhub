@@ -49,7 +49,7 @@ export default function RegisterPage() {
       if (!res.ok) {
         setError(data.error || "Ошибка регистрации");
       } else {
-        router.push("/login?registered=true");
+        router.push("/login?registered=1");
       }
     } catch {
       setError("Ошибка сети. Попробуйте позже.");

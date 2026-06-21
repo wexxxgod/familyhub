@@ -60,6 +60,8 @@ model User {
   email             String      @unique
   emailVerified     Boolean     @default(false)
   verificationToken String?
+  resetToken        String?
+  resetTokenExpires DateTime?
   name              String?
   passwordHash      String?
   image             String?

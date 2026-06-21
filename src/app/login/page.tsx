@@ -6,7 +6,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 
-type Mode = "select" | "login" | "create" | "join";
+type Mode = "select" | "login" | "create" | "join" | "forgot";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -41,9 +41,10 @@ export default function LoginPage() {
 
         <AnimatePresence mode="wait">
           {mode === "select" && <ModeSelect onSelect={setMode} key="select" />}
-          {mode === "login" && <LoginForm onBack={() => setMode("select")} key="login" />}
+          {mode === "login" && <LoginForm onBack={() => setMode("select")} onForgot={() => setMode("forgot")} key="login" />}
           {mode === "create" && <CreateFamilyForm onBack={() => setMode("select")} key="create" />}
           {mode === "join" && <JoinFamilyForm onBack={() => setMode("select")} key="join" />}
+          {mode === "forgot" && <ForgotPasswordForm onBack={() => setMode("login")} key="forgot" />}
         </AnimatePresence>
       </motion.div>
     </div>
@@ -126,12 +127,20 @@ function ModeSelect({ onSelect }: { onSelect: (mode: Mode) => void }) {
   );
 }
 
-function LoginForm({ onBack }: { onBack: () => void }) {
+function LoginForm({ onBack, onForgot }: { onBack: () => void; onForgot?: () => void }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [successBanner, setSuccessBanner] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (window.location.search.includes("registered=1")) {
+      setSuccessBanner("Аккаунт создан! Подтвердите email — мы отправили письмо.");
+      window.history.replaceState({}, "", "/login");
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -196,7 +205,16 @@ function LoginForm({ onBack }: { onBack: () => void }) {
               placeholder="••••••••"
               required
             />
+            <div className="text-right mt-1">
+              <button type="button" onClick={onForgot} className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                Забыли пароль?
+              </button>
+            </div>
           </div>
+
+          {successBanner && (
+            <div className="px-4 py-3 rounded-xl bg-green-500/10 border border-green-500/20 text-green-500 text-sm">{successBanner}</div>
+          )}
 
           {error && (
             <div className="px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-sm">{error}</div>
@@ -401,6 +419,88 @@ function CreateFamilyForm({ onBack }: { onBack: () => void }) {
               className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold hover:opacity-90 transition-all disabled:opacity-50"
             >
               {loading ? (step === "creating" ? "Создаём семью..." : "Регистрация...") : "Создать семью"}
+            </button>
+          </form>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
+function ForgotPasswordForm({ onBack }: { onBack: () => void }) {
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSuccess(true);
+      } else {
+        setError(data.error || "Ошибка");
+      }
+    } catch {
+      setError("Ошибка сети. Попробуйте позже.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
+      <button onClick={onBack} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="15 18 9 12 15 6" />
+        </svg>
+        Назад
+      </button>
+
+      <div className="glass-card p-8">
+        <h2 className="text-2xl font-bold mb-1">Восстановление пароля</h2>
+        <p className="text-muted-foreground text-sm mb-6">Введите email, и мы пришлём ссылку для сброса</p>
+
+        {success ? (
+          <div className="text-center py-8">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center mx-auto mb-4">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold mb-1">Письмо отправлено!</h3>
+            <p className="text-sm text-muted-foreground">Проверьте почту и перейдите по ссылке в письме.</p>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl bg-background border border-input focus:border-ring focus:ring-1 focus:ring-ring outline-none transition-all"
+                placeholder="family@example.com"
+                required
+              />
+            </div>
+            {error && (
+              <div className="px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-sm">{error}</div>
+            )}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-all disabled:opacity-50"
+            >
+              {loading ? "Отправка..." : "Отправить"}
             </button>
           </form>
         )}

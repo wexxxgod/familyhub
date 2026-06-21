@@ -30,3 +30,25 @@ export async function sendVerificationEmail(to: string, token: string) {
   const { error } = await resend.emails.send({ from: FROM, to, subject: "Подтвердите email — FamilyHub", html });
   if (error) throw new Error(error.message);
 }
+
+export async function sendPasswordResetEmail(to: string, token: string) {
+  const resend = getResend();
+  if (!resend) return;
+
+  const link = `${APP_URL}/reset-password?token=${encodeURIComponent(token)}`;
+  const html = `
+    <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+      <h2 style="color: #f59e0b;">FamilyHub</h2>
+      <p>Здравствуйте!</p>
+      <p>Вы запросили восстановление пароля. Нажмите на кнопку, чтобы задать новый пароль:</p>
+      <a href="${link}" style="display: inline-block; padding: 12px 24px; background: #f59e0b; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 16px 0;">
+        Сбросить пароль
+      </a>
+      <p style="color: #666; font-size: 14px;">Или скопируйте ссылку: <br/>${link}</p>
+      <p style="color: #666; font-size: 12px; margin-top: 24px;">Если вы не запрашивали сброс пароля, проигнорируйте это письмо.</p>
+    </div>
+  `;
+
+  const { error } = await resend.emails.send({ from: FROM, to, subject: "Восстановление пароля — FamilyHub", html });
+  if (error) throw new Error(error.message);
+}
