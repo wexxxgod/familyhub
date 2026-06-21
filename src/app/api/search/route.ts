@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, logError, jsonError, safeInt, safeDate, Role } from "@/lib/auth-helpers";
+import { getCurrentUser, logError, jsonError } from "@/lib/auth-helpers";
 
 export async function GET(req: NextRequest) {
   try {
@@ -14,7 +14,10 @@ export async function GET(req: NextRequest) {
     const [posts, users, archive, events] = await Promise.all([
       prisma.post.findMany({
         where: {
-          content: { contains: q, mode: "insensitive" },
+          OR: [
+            { content: { contains: q, mode: "insensitive" } },
+            { tags: { has: q.toLowerCase() } },
+          ],
           author: { familyId: user.familyId },
         },
         include: { author: true },
@@ -29,7 +32,10 @@ export async function GET(req: NextRequest) {
       }),
       prisma.archiveItem.findMany({
         where: {
-          title: { contains: q, mode: "insensitive" },
+          OR: [
+            { title: { contains: q, mode: "insensitive" } },
+            { tags: { has: q.toLowerCase() } },
+          ],
           uploadedBy: { familyId: user.familyId },
         },
         take: 10,

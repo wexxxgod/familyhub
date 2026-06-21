@@ -9,6 +9,7 @@ import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { GradientAvatar } from "@/components/shared/GradientAvatar";
 import { useStore } from "@/store";
 import { api } from "@/lib/api";
+import { motion, AnimatePresence } from "framer-motion";
 
 const DRAWER_ITEMS = [
   { label: "Лента", href: "/feed", icon: "📝" },
@@ -60,10 +61,21 @@ export function DashboardHeader() {
         setSearchOpen(false);
         setDrawerOpen(false);
       }
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault();
+        setSearchOpen(true);
+        setTimeout(() => searchRef.current?.focus(), 100);
+      }
     };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
   }, []);
+
+  useEffect(() => {
+    if (searchOpen) {
+      setTimeout(() => searchRef.current?.focus(), 150);
+    }
+  }, [searchOpen]);
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -117,6 +129,12 @@ export function DashboardHeader() {
                   {searchResults.archive?.slice(0, 3).map((a: any) => (
                     <button key={a.id} onClick={() => { router.push("/archive"); setSearchQuery(""); setSearchResults(null); }} className="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-accent transition-colors">
                       {a.title}
+                    </button>
+                  ))}
+                  {searchResults.events?.length > 0 && <p className="text-xs text-muted-foreground px-3 pt-2 pb-1">События</p>}
+                  {searchResults.events?.slice(0, 3).map((e: any) => (
+                    <button key={e.id} onClick={() => { router.push("/calendar"); setSearchQuery(""); setSearchResults(null); }} className="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-accent transition-colors">
+                      {e.title}
                     </button>
                   ))}
                 </div>
@@ -274,31 +292,64 @@ export function DashboardHeader() {
         </>
       )}
 
-      {searchOpen && (
-        <div className="lg:hidden px-4 pb-3 relative">
-          <input type="search" placeholder="Поиск..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full px-4 py-2.5 rounded-xl bg-accent outline-none text-sm" autoFocus aria-label="Поиск" />
-          {searchResults && searchQuery.trim() && (
-            <div className="absolute top-full mt-2 left-4 right-4 glass-card p-2 z-50 max-h-80 overflow-y-auto">
-              {searchResults.posts?.length > 0 && <p className="text-xs text-muted-foreground px-3 pt-2 pb-1">Посты</p>}
-              {searchResults.posts?.slice(0, 3).map((p: any) => (
-                <button key={p.id} onClick={() => { router.push("/feed"); setSearchQuery(""); setSearchResults(null); setSearchOpen(false); }} className="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-accent transition-colors">
-                  {p.content?.slice(0, 80)}...
-                </button>
-              ))}
-              {searchResults.users?.length > 0 && <p className="text-xs text-muted-foreground px-3 pt-2 pb-1">Пользователи</p>}
-              {searchResults.users?.slice(0, 3).map((u: any) => (
-                <div key={u.id} className="px-3 py-2 text-sm">{u.name}</div>
-              ))}
-              {searchResults.archive?.length > 0 && <p className="text-xs text-muted-foreground px-3 pt-2 pb-1">Архив</p>}
-              {searchResults.archive?.slice(0, 3).map((a: any) => (
-                <button key={a.id} onClick={() => { router.push("/archive"); setSearchQuery(""); setSearchResults(null); setSearchOpen(false); }} className="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-accent transition-colors">
-                  {a.title}
-                </button>
-              ))}
+      <AnimatePresence>
+        {searchOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: "easeInOut" }}
+            className="lg:hidden overflow-hidden"
+          >
+            <div className="px-4 pb-3 relative">
+              <input
+                ref={searchRef}
+                type="search"
+                placeholder="Поиск..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-full bg-white/60 dark:bg-white/5 border border-border/30 outline-none text-sm focus:border-amber-300/50 transition-all"
+                autoFocus
+                aria-label="Поиск"
+              />
+              <AnimatePresence>
+                {searchResults && searchQuery.trim() && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute top-full mt-2 left-4 right-4 glass-card p-2 z-50 max-h-80 overflow-y-auto shadow-xl"
+                  >
+                    {searchResults.posts?.length > 0 && <p className="text-xs text-muted-foreground px-3 pt-2 pb-1">Посты</p>}
+                    {searchResults.posts?.slice(0, 3).map((p: any) => (
+                      <button key={p.id} onClick={() => { router.push("/feed"); setSearchQuery(""); setSearchResults(null); setSearchOpen(false); }} className="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-accent transition-colors">
+                        {p.content?.slice(0, 80)}...
+                      </button>
+                    ))}
+                    {searchResults.users?.length > 0 && <p className="text-xs text-muted-foreground px-3 pt-2 pb-1">Пользователи</p>}
+                    {searchResults.users?.slice(0, 3).map((u: any) => (
+                      <div key={u.id} className="px-3 py-2 text-sm">{u.name}</div>
+                    ))}
+                    {searchResults.archive?.length > 0 && <p className="text-xs text-muted-foreground px-3 pt-2 pb-1">Архив</p>}
+                    {searchResults.archive?.slice(0, 3).map((a: any) => (
+                      <button key={a.id} onClick={() => { router.push("/archive"); setSearchQuery(""); setSearchResults(null); setSearchOpen(false); }} className="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-accent transition-colors">
+                        {a.title}
+                      </button>
+                    ))}
+                    {searchResults.events?.length > 0 && <p className="text-xs text-muted-foreground px-3 pt-2 pb-1">События</p>}
+                    {searchResults.events?.slice(0, 3).map((e: any) => (
+                      <button key={e.id} onClick={() => { router.push("/calendar"); setSearchQuery(""); setSearchResults(null); setSearchOpen(false); }} className="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-accent transition-colors">
+                        {e.title}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-          )}
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }

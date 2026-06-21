@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, logError, jsonError, safeInt, safeDate, Role } from "@/lib/auth-helpers";
+import { getCurrentUser, logError, jsonError, safeDate } from "@/lib/auth-helpers";
 
 export async function GET(req: NextRequest) {
   try {
@@ -42,5 +42,28 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     logError("family_tree_POST", error);
     return jsonError("Failed to create member", 500);
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const user = await getCurrentUser(req);
+    if (!user) return jsonError("Unauthorized", 401);
+    if (!user.familyId) return jsonError("Вы не в семье", 400);
+
+    const { id } = await req.json();
+    if (!id) return jsonError("ID обязателен", 400);
+
+    const member = await prisma.familyMember.findUnique({ where: { id } });
+    if (!member || member.familyId !== user.familyId) {
+      return jsonError("Запись не найдена", 404);
+    }
+
+    await prisma.familyMember.delete({ where: { id } });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    logError("family_tree_DELETE", error);
+    return jsonError("Ошибка удаления", 500);
   }
 }

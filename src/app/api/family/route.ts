@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, createSessionToken, setSessionCookie, logError, jsonError, safeInt, safeDate, Role } from "@/lib/auth-helpers";
+import { getCurrentUser, createSessionToken, setSessionCookie, logError, jsonError, Role } from "@/lib/auth-helpers";
 import crypto from "crypto";
 
 function generateInviteCode(): string {
@@ -114,9 +114,12 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: "Пользователь не найден в семье" }, { status: 404 });
     }
 
+    await prisma.notification.deleteMany({ where: { userId } });
+    await prisma.chatRoomMember.deleteMany({ where: { userId } });
+
     await prisma.user.update({
       where: { id: userId },
-      data: { familyId: null },
+      data: { familyId: null, role: Role.GUEST },
     });
 
     return NextResponse.json({ success: true });

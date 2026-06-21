@@ -85,6 +85,7 @@ export const api = {
   familyTree: {
     list: () => request<any[]>("/api/family-tree"),
     create: (data: any) => request<any>("/api/family-tree", { method: "POST", body: JSON.stringify(data) }),
+    delete: (id: string) => request<any>("/api/family-tree", { method: "DELETE", body: JSON.stringify({ id }) }),
   },
   pets: {
     list: () => request<any[]>("/api/pets"),

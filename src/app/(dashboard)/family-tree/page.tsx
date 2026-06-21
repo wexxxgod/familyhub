@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { api } from "@/lib/api";
+import toast from "react-hot-toast";
 
 export default function FamilyTreePage() {
   const [members, setMembers] = useState<any[]>([]);
@@ -30,6 +31,17 @@ export default function FamilyTreePage() {
     setSubmitting(false);
   };
 
+  const handleDelete = async (id: string, name: string) => {
+    if (!confirm(`Удалить ${name} из древа?`)) return;
+    try {
+      await api.familyTree.delete(id);
+      setMembers(members.filter((m) => m.id !== id));
+      toast.success(`${name} удалён(а)`);
+    } catch {
+      toast.error("Ошибка при удалении");
+    }
+  };
+
   const rootNodes = members.filter((m: any) => !m.parentId);
   const childrenOf = (parentId: string) => members.filter((m: any) => m.parentId === parentId);
 
@@ -38,10 +50,16 @@ export default function FamilyTreePage() {
       {nodes.map((node) => {
         const children = childrenOf(node.id);
         return (
-          <div key={node.id} className="flex flex-col items-center">
-            <div className="glass-card px-6 py-3 text-center hover-lift cursor-pointer min-w-[140px]">
+          <div key={node.id} className="flex flex-col items-center group">
+            <div className="glass-card px-6 py-3 text-center hover-lift cursor-pointer min-w-[140px] relative">
               <p className="font-semibold text-sm">{node.firstName} {node.lastName}</p>
               {node.dateOfBirth && <p className="text-xs text-muted-foreground">{new Date(node.dateOfBirth).toLocaleDateString("ru-RU")}</p>}
+              <button
+                onClick={(e) => { e.stopPropagation(); handleDelete(node.id, `${node.firstName} ${node.lastName}`); }}
+                className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+              >
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+              </button>
             </div>
             {children.length > 0 && (
               <>
