@@ -67,6 +67,14 @@ export default function ChatPage() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const readFileAsDataURL = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
   const handleSend = async () => {
     if ((!input.trim() && !selectedFile) || sending) return;
     setSending(true);
@@ -75,7 +83,15 @@ export default function ChatPage() {
       let msg: any;
 
       if (selectedFile) {
+        const localUrl = await readFileAsDataURL(selectedFile);
         msg = await api.chat.sendWithFile(selectedFile, input.trim());
+
+        const isImage = selectedFile.type.startsWith("image/");
+        if (isImage) {
+          msg.image = localUrl;
+        } else {
+          msg.file = { url: localUrl, name: selectedFile.name, type: selectedFile.type };
+        }
       } else {
         msg = await api.chat.send({ content: input.trim() });
       }

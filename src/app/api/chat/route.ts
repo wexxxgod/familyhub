@@ -141,5 +141,9 @@ async function handleFormDataPost(req: NextRequest, user: { id: string; familyId
   });
 
   const parsed = message.file ? { ...message, file: JSON.parse(message.file) } : message;
+  // Не возвращаем base64 в POST-ответе — фронтенд использует локальный URL,
+  // а реальные данные подтянутся через GET-опрос (лимит Vercel 4.5MB на ответ)
+  if (parsed.image) parsed.image = "__pending__";
+  if (parsed.file) parsed.file = { name: parsed.file.name, type: parsed.file.type, url: "__pending__" };
   return NextResponse.json(parsed);
 }
