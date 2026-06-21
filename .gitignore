@@ -6,4 +6,4 @@ dist/
 .env
 .env.local
 *.db
-prisma/migrations/
+
