@@ -72,27 +72,13 @@ export default function ChatPage() {
     setSending(true);
 
     try {
-      let imageUrl: string | null = null;
-      let fileUrl: string | null = null;
-      let fileName: string | null = null;
-      let fileType: string | null = null;
+      let msg: any;
 
       if (selectedFile) {
-        const uploaded = await api.upload.file(selectedFile);
-        if (selectedFile.type.startsWith("image/")) {
-          imageUrl = uploaded.url;
-        } else {
-          fileUrl = uploaded.url;
-          fileName = uploaded.name;
-          fileType = selectedFile.type;
-        }
+        msg = await api.chat.sendWithFile(selectedFile, input.trim());
+      } else {
+        msg = await api.chat.send({ content: input.trim() });
       }
-
-      const msg = await api.chat.send({
-        content: input.trim(),
-        ...(imageUrl && { image: imageUrl }),
-        ...(fileUrl && { file: fileUrl, fileName, fileType }),
-      });
 
       setMessages((prev) => [...prev, { ...msg, sender: { id: currentUserId, name: user?.name } }]);
       setInput("");

@@ -34,6 +34,17 @@ export const api = {
   chat: {
     list: () => request<any[]>("/api/chat"),
     send: (data: any) => request<any>("/api/chat", { method: "POST", body: JSON.stringify(data) }),
+    sendWithFile: async (file: File, content: string) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("content", content);
+      const res = await fetch("/api/chat", { method: "POST", body: formData });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Request failed" }));
+        throw new Error(err.error || "Request failed");
+      }
+      return res.json();
+    },
   },
   admin: {
     stats: () => request<any>("/api/admin"),
