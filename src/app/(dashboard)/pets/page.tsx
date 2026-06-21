@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { SkeletonGrid } from "@/components/shared/SkeletonCard";
 import { DeleteButton } from "@/components/shared/DeleteButton";
 import { FileUpload } from "@/components/shared/FileUpload";
+import { ImageViewer } from "@/components/shared/ImageViewer";
 import { api } from "@/lib/api";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import toast from "react-hot-toast";
@@ -40,6 +41,14 @@ export default function PetsPage() {
     notes: "",
   });
 
+  const [albumPet, setAlbumPet] = useState<any | null>(null);
+  const [photos, setPhotos] = useState<any[]>([]);
+  const [photosLoading, setPhotosLoading] = useState(false);
+  const [addingPhoto, setAddingPhoto] = useState(false);
+  const [deletingPhotoId, setDeletingPhotoId] = useState<string | null>(null);
+  const [viewImage, setViewImage] = useState<string | null>(null);
+  const albumFileRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     api.pets.list().then((data) => {
       setPets(data);
@@ -69,6 +78,50 @@ export default function PetsPage() {
       toast.success("Питомец удалён");
     } catch { toast.error("Ошибка при удалении"); }
     setDeletingId(null);
+  };
+
+  const openAlbum = async (pet: any) => {
+    setAlbumPet(pet);
+    setPhotosLoading(true);
+    try {
+      const data = await api.pets.photos.list(pet.id);
+      setPhotos(data);
+    } catch { toast.error("Ошибка загрузки фото"); }
+    setPhotosLoading(false);
+  };
+
+  const closeAlbum = () => {
+    setAlbumPet(null);
+    setPhotos([]);
+    setAddingPhoto(false);
+  };
+
+  const handleAlbumUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0 || !albumPet) return;
+    setAddingPhoto(true);
+    try {
+      for (const file of files) {
+        const res = await api.upload.file(file);
+        await api.pets.photos.add(albumPet.id, res.url);
+      }
+      const updated = await api.pets.photos.list(albumPet.id);
+      setPhotos(updated);
+      toast.success(`Добавлено ${files.length} фото`);
+    } catch { toast.error("Ошибка загрузки"); }
+    setAddingPhoto(false);
+    if (albumFileRef.current) albumFileRef.current.value = "";
+  };
+
+  const handleDeletePhoto = async (photoId: string) => {
+    if (deletingPhotoId) return;
+    setDeletingPhotoId(photoId);
+    try {
+      await api.pets.photos.delete(photoId);
+      setPhotos((prev) => prev.filter((p) => p.id !== photoId));
+      toast.success("Фото удалено");
+    } catch { toast.error("Ошибка удаления"); }
+    setDeletingPhotoId(null);
   };
 
   if (loading) {
@@ -222,11 +275,113 @@ export default function PetsPage() {
                 {pet.owner && (
                   <p className="text-xs text-muted-foreground mt-3">Владелец: {pet.owner.name || "—"}</p>
                 )}
+                <button
+                  onClick={() => openAlbum(pet)}
+                  className="mt-4 w-full py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-2"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
+                  </svg>
+                  Альбом
+                </button>
               </div>
             </motion.div>
           ))}
         </div>
       )}
+
+      <AnimatePresence>
+        {albumPet && (
+          <>
+            <div className="fixed inset-0 bg-black/50 z-40" onClick={closeAlbum} />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            >
+              <div className="glass-card w-full max-w-2xl max-h-[85vh] overflow-y-auto p-6" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-bold">Фотоальбом: {albumPet.name}</h2>
+                  <button onClick={closeAlbum} className="p-1.5 rounded-lg hover:bg-accent transition-colors">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                  </button>
+                </div>
+
+                <div className="mb-4">
+                  <button
+                    onClick={() => albumFileRef.current?.click()}
+                    disabled={addingPhoto}
+                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-semibold hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {addingPhoto ? (
+                      <>
+                        <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                        Загрузка...
+                      </>
+                    ) : (
+                      <>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                        Добавить фото
+                      </>
+                    )}
+                  </button>
+                  <input
+                    ref={albumFileRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={handleAlbumUpload}
+                  />
+                </div>
+
+                {photosLoading ? (
+                  <div className="grid grid-cols-3 gap-3">
+                    {[1, 2, 3, 4, 5, 6].map((i) => (
+                      <div key={i} className="aspect-square rounded-2xl bg-accent animate-pulse" />
+                    ))}
+                  </div>
+                ) : photos.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <svg className="mx-auto mb-3" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
+                    </svg>
+                    <p className="text-sm">Фото пока нет</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-3 gap-3">
+                    {photos.map((photo) => (
+                      <div key={photo.id} className="relative group aspect-square rounded-2xl overflow-hidden bg-accent">
+                        <img
+                          src={photo.url}
+                          alt={photo.caption || ""}
+                          className="w-full h-full object-cover cursor-pointer"
+                          onClick={() => setViewImage(photo.url)}
+                        />
+                        <button
+                          onClick={() => handleDeletePhoto(photo.id)}
+                          disabled={deletingPhotoId === photo.id}
+                          className="absolute top-1.5 right-1.5 p-1.5 rounded-full bg-black/50 text-white hover:bg-black/70 transition-all opacity-0 group-hover:opacity-100 backdrop-blur-sm disabled:opacity-30"
+                          aria-label="Удалить фото"
+                        >
+                          {deletingPhotoId === photo.id ? (
+                            <div className="w-3 h-3 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                          ) : (
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                          )}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {viewImage && <ImageViewer src={viewImage} onClose={() => setViewImage(null)} />}
     </div>
   );
 }

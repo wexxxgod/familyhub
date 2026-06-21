@@ -46,6 +46,34 @@ export async function POST(req: NextRequest) {
   }
 }
 
+export async function PATCH(req: NextRequest) {
+  try {
+    const user = await getCurrentUser(req);
+    if (!user) return jsonError("Unauthorized", 401);
+    const data = await req.json();
+    const pet = await prisma.pet.findUnique({ where: { id: data.id } });
+    if (!pet) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (pet.familyId !== user.familyId) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+    const updated = await prisma.pet.update({
+      where: { id: data.id },
+      data: {
+        ...(data.name !== undefined && { name: data.name }),
+        ...(data.species !== undefined && { species: data.species }),
+        ...(data.breed !== undefined && { breed: data.breed }),
+        ...(data.dateOfBirth !== undefined && { dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : null }),
+        ...(data.photo !== undefined && { photo: data.photo }),
+        ...(data.notes !== undefined && { notes: data.notes }),
+      },
+      include: { owner: { select: { id: true, name: true, image: true } } },
+    });
+    return NextResponse.json(updated);
+  } catch (error) {
+    logError("pets_PATCH", error);
+    return jsonError("Failed to update pet", 500);
+  }
+}
+
 export async function DELETE(req: NextRequest) {
   try {
     const user = await getCurrentUser(req);

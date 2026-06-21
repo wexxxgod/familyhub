@@ -74,9 +74,9 @@ export default function FeedPage() {
 
   useEffect(() => { fetchPosts(); }, [fetchPosts]);
 
-  const handleCreatePost = async (content: string, image?: string) => {
+  const handleCreatePost = async (content: string, images?: string[]) => {
     try {
-      const newPost = await api.posts.create({ content, image });
+      const newPost = await api.posts.create({ content, image: images?.[0], images });
       const mapped = mapPost(newPost);
       setPosts((prev) => [mapped, ...prev]);
       toast.success("Пост опубликован");

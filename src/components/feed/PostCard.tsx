@@ -67,6 +67,52 @@ export function PostCard({ post, currentUserId, currentUserRole, onToggleLike, o
     }
   };
 
+  const renderImages = (imgs: string[]) => {
+    const validImgs = imgs.filter(Boolean);
+    if (validImgs.length === 0) return null;
+    if (validImgs.length === 1) {
+      return (
+        <div className="cursor-pointer" onClick={() => setViewImage(validImgs[0])}>
+          <img src={validImgs[0]} alt="Изображение поста" className="w-full rounded-2xl transition-all duration-300 hover:opacity-90 hover:shadow-lg" loading="lazy" />
+        </div>
+      );
+    }
+    if (validImgs.length === 2) {
+      return (
+        <div className="grid grid-cols-2 gap-2">
+          {validImgs.map((src, i) => (
+            <div key={i} className="cursor-pointer aspect-square rounded-2xl overflow-hidden" onClick={() => setViewImage(src)}>
+              <img src={src} alt="" className="w-full h-full object-cover transition-all duration-300 hover:opacity-90 hover:shadow-lg" loading="lazy" />
+            </div>
+          ))}
+        </div>
+      );
+    }
+    if (validImgs.length === 3) {
+      return (
+        <div className="grid grid-cols-2 gap-2">
+          <div className="row-span-2 cursor-pointer rounded-2xl overflow-hidden" onClick={() => setViewImage(validImgs[0])}>
+            <img src={validImgs[0]} alt="" className="w-full h-full object-cover transition-all duration-300 hover:opacity-90 hover:shadow-lg" loading="lazy" />
+          </div>
+          {validImgs.slice(1).map((src, i) => (
+            <div key={i} className="cursor-pointer aspect-square rounded-2xl overflow-hidden" onClick={() => setViewImage(src)}>
+              <img src={src} alt="" className="w-full h-full object-cover transition-all duration-300 hover:opacity-90 hover:shadow-lg" loading="lazy" />
+            </div>
+          ))}
+        </div>
+      );
+    }
+    return (
+      <div className="grid grid-cols-3 gap-2">
+        {validImgs.map((src, i) => (
+          <div key={i} className="cursor-pointer aspect-square rounded-2xl overflow-hidden" onClick={() => setViewImage(src)}>
+            <img src={src} alt="" className="w-full h-full object-cover transition-all duration-300 hover:opacity-90 hover:shadow-lg" loading="lazy" />
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <>
       <div className="bento-card gradient-border">
@@ -121,9 +167,9 @@ export function PostCard({ post, currentUserId, currentUserRole, onToggleLike, o
           )}
         </div>
 
-        {post.image && (
-          <div className="px-5 pb-1 cursor-pointer" onClick={() => setViewImage(post.image)}>
-            <img src={post.image} alt="Изображение поста" className="w-full rounded-2xl transition-all duration-300 hover:opacity-90 hover:shadow-lg" loading="lazy" />
+        {(post.images?.length > 0 || post.image) && (
+          <div className="px-5 pb-1">
+            {renderImages(post.images?.length > 0 ? post.images : [post.image])}
           </div>
         )}
 

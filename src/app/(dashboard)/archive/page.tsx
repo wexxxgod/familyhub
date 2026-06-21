@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { ImageViewer } from "@/components/shared/ImageViewer";
 import { DeleteButton } from "@/components/shared/DeleteButton";
+import { FileUpload } from "@/components/shared/FileUpload";
 import toast from "react-hot-toast";
 
 const CATEGORIES = ["Все", "PHOTO", "VIDEO", "DOCUMENT", "CERTIFICATE", "HEIRLOOM"];
@@ -26,7 +27,8 @@ export default function ArchivePage() {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState({ title: "", description: "", url: "", category: "PHOTO", year: "" });
+  const [editingItem, setEditingItem] = useState<any | null>(null);
+  const [form, setForm] = useState({ title: "", description: "", images: [] as string[], url: "", category: "PHOTO", year: "" });
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -34,7 +36,7 @@ export default function ArchivePage() {
   const modalRef = useRef<HTMLDivElement>(null);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.key === "Escape") { setShowModal(false); return; }
+    if (e.key === "Escape") { setShowModal(false); setEditingItem(null); return; }
     if (e.key !== "Tab" || !modalRef.current) return;
     const focusable = modalRef.current.querySelectorAll<HTMLElement>(
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
@@ -72,42 +74,83 @@ export default function ArchivePage() {
     setDeletingId(null);
   };
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const openCreate = () => {
+    setEditingItem(null);
+    setForm({ title: "", description: "", images: [], url: "", category: "PHOTO", year: "" });
+    setShowModal(true);
+  };
+
+  const openEdit = (item: any) => {
+    setEditingItem(item);
+    setForm({
+      title: item.title || "",
+      description: item.description || "",
+      images: item.images || [],
+      url: item.url || "",
+      category: item.category || "PHOTO",
+      year: item.year?.toString() || "",
+    });
+    setShowModal(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.title.trim()) { toast.error("Введите название"); return; }
     setSubmitting(true);
     try {
-      const item = await api.archive.create({
-        title: form.title.trim(),
-        description: form.description.trim(),
-        url: form.url.trim() || undefined,
-        category: form.category,
-        year: form.year || undefined,
-      });
-      setItems([item, ...items]);
+      if (editingItem) {
+        const updated = await api.archive.update(editingItem.id, {
+          title: form.title.trim(),
+          description: form.description.trim(),
+          images: form.images,
+          url: form.url.trim() || undefined,
+          category: form.category,
+          year: form.year || undefined,
+        });
+        setItems(items.map((item) => (item.id === editingItem.id ? updated : item)));
+        toast.success("Элемент обновлён");
+      } else {
+        const item = await api.archive.create({
+          title: form.title.trim(),
+          description: form.description.trim(),
+          images: form.images,
+          url: form.url.trim() || undefined,
+          category: form.category,
+          year: form.year || undefined,
+        });
+        setItems([item, ...items]);
+        toast.success("Элемент добавлен в архив");
+      }
       setShowModal(false);
-      setForm({ title: "", description: "", url: "", category: "PHOTO", year: "" });
-      toast.success("Элемент добавлен в архив");
+      setEditingItem(null);
     } catch {
-      toast.error("Ошибка при добавлении");
+      toast.error(editingItem ? "Ошибка при обновлении" : "Ошибка при добавлении");
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
     setUploading(true);
     try {
-      const res = await api.upload.file(file);
-      setForm((prev) => ({ ...prev, url: res.url }));
-      toast.success("Файл загружен");
+      const urls: string[] = [];
+      for (const file of files) {
+        const res = await api.upload.file(file);
+        urls.push(res.url);
+      }
+      setForm((prev) => ({ ...prev, images: [...prev.images, ...urls] }));
+      toast.success(`Загружено ${urls.length} файлов`);
     } catch {
       toast.error("Ошибка загрузки");
     } finally {
       setUploading(false);
     }
+  };
+
+  const removeImage = (index: number) => {
+    setForm((prev) => ({ ...prev, images: prev.images.filter((_, i) => i !== index) }));
   };
 
   const filtered = items.filter((item) => {
@@ -143,7 +186,7 @@ export default function ArchivePage() {
             </button>
           ))}
           <button
-            onClick={() => setShowModal(true)}
+            onClick={openCreate}
             className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-semibold hover:opacity-90 transition-all ml-2"
           >
             + Добавить
@@ -162,50 +205,71 @@ export default function ArchivePage() {
         </motion.div>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map((item, i) => (
-            <motion.div key={item.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="glass-card p-5 relative group">
-              {(currentUserId && item.uploadedById === currentUserId) && (
-                <DeleteButton onClick={() => handleDelete(item.id)} disabled={deletingId === item.id} />
-              )}
-              {item.url && (
-                <div className="w-full rounded-xl overflow-hidden mb-3 cursor-pointer" onClick={() => setViewImage(item.url)}>
-                  <img src={item.url} alt={item.title} className="w-full" />
-                </div>
-              )}
-              {!item.url && (
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500/20 to-amber-500/20 flex items-center justify-center mb-3">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-rose-500">
-                    <path d={CAT_ICONS[item.category as keyof typeof CAT_ICONS] || "M4 19.5A2.5 2.5 0 0 1 6.5 17H20"} />
-                  </svg>
-                </div>
-              )}
-              <h3 className="font-semibold text-sm mb-1">{item.title}</h3>
-              {item.description && <p className="text-xs text-muted-foreground mb-1 line-clamp-2">{item.description}</p>}
-              <p className="text-xs text-muted-foreground">{CAT_NAMES[item.category] || item.category}{item.year ? ` • ${item.year}` : ""}</p>
-            </motion.div>
-          ))}
+          {filtered.map((item, i) => {
+            const allImages = [...(item.images || []), ...(item.url ? [item.url] : [])];
+            return (
+              <motion.div key={item.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="glass-card p-5 relative group">
+                {(currentUserId && item.uploadedById === currentUserId) && (
+                  <>
+                    <DeleteButton onClick={() => handleDelete(item.id)} disabled={deletingId === item.id} />
+                    <button
+                      onClick={() => openEdit(item)}
+                      className="absolute top-3 right-12 p-1.5 rounded-lg bg-accent hover:bg-accent/80 transition-all opacity-0 group-hover:opacity-100"
+                      aria-label="Редактировать"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+                    </button>
+                  </>
+                )}
+                {allImages.length > 0 && (
+                  <div className="mb-3">
+                    <div className={`grid gap-2 ${allImages.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>
+                      {allImages.slice(0, allImages.length === 1 ? 1 : 4).map((src: string, idx: number) => (
+                        <div key={idx} className="rounded-xl overflow-hidden cursor-pointer" onClick={() => setViewImage(src)}>
+                          <img src={src} alt="" className="w-full aspect-square object-cover" />
+                        </div>
+                      ))}
+                    </div>
+                    {allImages.length > 4 && (
+                      <p className="text-xs text-muted-foreground mt-1">+{allImages.length - 4} ещё</p>
+                    )}
+                  </div>
+                )}
+                {allImages.length === 0 && (
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500/20 to-amber-500/20 flex items-center justify-center mb-3">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-rose-500">
+                      <path d={CAT_ICONS[item.category as keyof typeof CAT_ICONS] || "M4 19.5A2.5 2.5 0 0 1 6.5 17H20"} />
+                    </svg>
+                  </div>
+                )}
+                <h3 className="font-semibold text-sm mb-1">{item.title}</h3>
+                {item.description && <p className="text-xs text-muted-foreground mb-1 line-clamp-2">{item.description}</p>}
+                <p className="text-xs text-muted-foreground">{CAT_NAMES[item.category] || item.category}{item.year ? ` • ${item.year}` : ""}</p>
+              </motion.div>
+            );
+          })}
         </div>
       )}
 
       <AnimatePresence>
         {showModal && (
           <>
-            <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setShowModal(false)} />
+            <div className="fixed inset-0 bg-black/50 z-40" onClick={() => { setShowModal(false); setEditingItem(null); }} />
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               className="fixed inset-0 z-50 flex items-center justify-center p-4"
             >
-              <div ref={modalRef} role="dialog" aria-modal="true" aria-label="Добавить в архив" className="glass-card p-6 w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+              <div ref={modalRef} role="dialog" aria-modal="true" aria-label={editingItem ? "Редактировать" : "Добавить в архив"} className="glass-card p-6 w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-bold">Добавить в архив</h2>
-                  <button onClick={() => setShowModal(false)} className="p-1.5 rounded-lg hover:bg-accent transition-colors">
+                  <h2 className="text-xl font-bold">{editingItem ? "Редактировать" : "Добавить в архив"}</h2>
+                  <button onClick={() => { setShowModal(false); setEditingItem(null); }} className="p-1.5 rounded-lg hover:bg-accent transition-colors">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
                   </button>
                 </div>
 
-                <form onSubmit={handleCreate} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium mb-2">Название *</label>
                     <input type="text" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })}
@@ -238,23 +302,42 @@ export default function ArchivePage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Файл или ссылка</label>
+                    <label className="block text-sm font-medium mb-2">URL ссылка</label>
                     <input type="text" value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl bg-background border border-input focus:border-ring focus:ring-1 focus:ring-ring outline-none transition-all mb-2"
+                      className="w-full px-4 py-3 rounded-xl bg-background border border-input focus:border-ring focus:ring-1 focus:ring-ring outline-none transition-all"
                       placeholder="URL изображения или документа" />
-                    <div className="flex items-center gap-2">
-                      <button type="button" onClick={() => document.getElementById("archive-file-input")?.click()}
-                        disabled={uploading}
-                        className="px-4 py-2 rounded-xl bg-accent hover:bg-accent/80 text-sm transition-all disabled:opacity-50">
-                        {uploading ? "Загрузка..." : "Загрузить файл"}
-                      </button>
-                      <input id="archive-file-input" type="file" accept="image/*,.pdf" className="hidden" onChange={handleFileUpload} />
-                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Изображения</label>
+                    <button type="button" onClick={() => document.getElementById("archive-file-input")?.click()}
+                      disabled={uploading}
+                      className="w-full px-4 py-3 rounded-xl bg-accent hover:bg-accent/80 text-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+                      {uploading ? (
+                        <><div className="w-4 h-4 rounded-full border-2 border-primary border-t-transparent animate-spin" /> Загрузка...</>
+                      ) : (
+                        <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg> Загрузить изображения</>
+                      )}
+                    </button>
+                    <input id="archive-file-input" type="file" accept="image/*" multiple className="hidden" onChange={handleFileUpload} />
+                    {form.images.length > 0 && (
+                      <div className="grid grid-cols-4 gap-2 mt-2">
+                        {form.images.map((url, i) => (
+                          <div key={i} className="relative group aspect-square rounded-lg overflow-hidden bg-accent">
+                            <img src={url} alt="" className="w-full h-full object-cover" />
+                            <button type="button" onClick={() => removeImage(i)}
+                              className="absolute top-0.5 right-0.5 p-0.5 rounded-full bg-black/50 text-white hover:bg-black/70 opacity-0 group-hover:opacity-100">
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <button type="submit" disabled={submitting || !form.title.trim()}
                     className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold hover:opacity-90 transition-all disabled:opacity-50">
-                    {submitting ? "Добавление..." : "Добавить в архив"}
+                    {submitting ? "Сохранение..." : editingItem ? "Сохранить" : "Добавить в архив"}
                   </button>
                 </form>
               </div>

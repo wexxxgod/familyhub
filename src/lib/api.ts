@@ -56,6 +56,7 @@ export const api = {
   archive: {
     list: () => request<any[]>("/api/archive"),
     create: (data: any) => request<any>("/api/archive", { method: "POST", body: JSON.stringify(data) }),
+    update: (id: string, data: any) => request<any>("/api/archive", { method: "PATCH", body: JSON.stringify({ id, ...data }) }),
     delete: (id: string) => request<any>("/api/archive", { method: "DELETE", body: JSON.stringify({ id }) }),
   },
   calendar: {
@@ -90,7 +91,14 @@ export const api = {
   pets: {
     list: () => request<any[]>("/api/pets"),
     create: (data: any) => request<any>("/api/pets", { method: "POST", body: JSON.stringify(data) }),
+    update: (id: string, data: any) => request<any>("/api/pets", { method: "PATCH", body: JSON.stringify({ id, ...data }) }),
     delete: (id: string) => request<any>("/api/pets", { method: "DELETE", body: JSON.stringify({ id }) }),
+    photos: {
+      list: (petId: string) => request<any[]>(`/api/pets/photos?petId=${petId}`),
+      add: (petId: string, url: string, caption?: string) =>
+        request<any>("/api/pets/photos", { method: "POST", body: JSON.stringify({ petId, url, caption }) }),
+      delete: (id: string) => request<any>(`/api/pets/photos?id=${id}`, { method: "DELETE" }),
+    },
   },
   members: {
     list: () => request<any[]>("/api/members"),

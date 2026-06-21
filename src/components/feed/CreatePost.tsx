@@ -8,26 +8,26 @@ import { GradientAvatar } from "@/components/shared/GradientAvatar";
 import toast from "react-hot-toast";
 
 interface CreatePostProps {
-  onSubmit: (content: string, image?: string) => void;
+  onSubmit: (content: string, images?: string[]) => void;
 }
 
 export function CreatePost({ onSubmit }: CreatePostProps) {
   const { user } = useCurrentUser();
   const [isExpanded, setIsExpanded] = useState(false);
   const [content, setContent] = useState("");
-  const [image, setImage] = useState<string | null>(null);
+  const [images, setImages] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSubmit = async () => {
-    if ((!content.trim() && !image) || uploading || submitting) return;
+    if ((!content.trim() && images.length === 0) || uploading || submitting) return;
     setSubmitting(true);
     try {
-      await onSubmit(content.trim(), image || undefined);
+      await onSubmit(content.trim(), images.length > 0 ? images : undefined);
       setContent("");
-      setImage(null);
+      setImages([]);
       setIsExpanded(false);
     } catch {
       toast.error("Ошибка при публикации");
@@ -37,47 +37,56 @@ export function CreatePost({ onSubmit }: CreatePostProps) {
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
     setUploading(true);
     try {
-      const compressed = await compressImage(file, 800, 0.7);
-      const res = await api.upload.file(compressed);
-      setImage(res.url);
-      toast.success("Фото загружено");
+      const urls: string[] = [];
+      for (const file of files) {
+        const compressed = await compressImage(file, 800, 0.7);
+        const res = await api.upload.file(compressed);
+        urls.push(res.url);
+      }
+      setImages((prev) => [...prev, ...urls]);
+      toast.success(`Загружено ${urls.length} фото`);
     } catch {
       toast.error("Ошибка загрузки фото");
     } finally {
       setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
-async function compressImage(file: File, maxWidth: number, quality: number): Promise<File> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const objectUrl = URL.createObjectURL(file);
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      let { width, height } = img;
-      if (width > maxWidth) {
-        height = Math.round((height * maxWidth) / width);
-        width = maxWidth;
-      }
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) { URL.revokeObjectURL(objectUrl); reject(new Error("No canvas context")); return; }
-      ctx.drawImage(img, 0, 0, width, height);
-      canvas.toBlob((blob) => {
-        URL.revokeObjectURL(objectUrl);
-        if (!blob) { reject(new Error("Compression failed")); return; }
-        resolve(new File([blob], file.name, { type: "image/jpeg" }));
-      }, "image/jpeg", quality);
-    };
-    img.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error("Image load failed")); };
-    img.src = objectUrl;
-  });
-}
+  const removeImage = (index: number) => {
+    setImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  async function compressImage(file: File, maxWidth: number, quality: number): Promise<File> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const objectUrl = URL.createObjectURL(file);
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let { width, height } = img;
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) { URL.revokeObjectURL(objectUrl); reject(new Error("No canvas context")); return; }
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob((blob) => {
+          URL.revokeObjectURL(objectUrl);
+          if (!blob) { reject(new Error("Compression failed")); return; }
+          resolve(new File([blob], file.name, { type: "image/jpeg" }));
+        }, "image/jpeg", quality);
+      };
+      img.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error("Image load failed")); };
+      img.src = objectUrl;
+    });
+  }
 
   return (
     <div className="bento-card gradient-border">
@@ -105,7 +114,7 @@ async function compressImage(file: File, maxWidth: number, quality: number): Pro
                 <p className="text-xs text-muted-foreground">Доступно только семье</p>
               </div>
               <button
-                onClick={() => { setIsExpanded(false); setContent(""); setImage(""); }}
+                onClick={() => { setIsExpanded(false); setContent(""); setImages([]); }}
                 className="ml-auto p-2 rounded-full hover:bg-white/40 dark:hover:bg-white/5 transition-all"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
@@ -120,16 +129,20 @@ async function compressImage(file: File, maxWidth: number, quality: number): Pro
               className="w-full min-h-[120px] bg-white/50 dark:bg-white/5 rounded-2xl p-4 outline-none resize-none text-sm border border-border/30 focus:border-amber-300/50 transition-all"
             />
 
-            {image && (
-              <div className="relative mt-3">
-                <img src={image} alt="preview" className="w-full rounded-2xl shadow-md" />
-                <button
-                  onClick={() => setImage(null)}
-                  className="absolute top-2 right-2 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-all backdrop-blur-sm"
-                  aria-label="Удалить фото"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-                </button>
+            {images.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-3">
+                {images.map((url, i) => (
+                  <div key={i} className="relative group aspect-square rounded-2xl overflow-hidden bg-accent">
+                    <img src={url} alt="" className="w-full h-full object-cover" />
+                    <button
+                      onClick={() => removeImage(i)}
+                      className="absolute top-1.5 right-1.5 p-1.5 rounded-full bg-black/50 text-white hover:bg-black/70 transition-all opacity-0 group-hover:opacity-100 backdrop-blur-sm"
+                      aria-label="Удалить фото"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
 
@@ -150,14 +163,14 @@ async function compressImage(file: File, maxWidth: number, quality: number): Pro
               </button>
               <div className="flex gap-2">
                 <button
-                  onClick={() => { setIsExpanded(false); setContent(""); setImage(""); }}
+                  onClick={() => { setIsExpanded(false); setContent(""); setImages([]); }}
                   className="btn-ghost px-4 py-2 text-sm"
                 >
                   Отмена
                 </button>
                 <button
                   onClick={handleSubmit}
-                  disabled={(!content.trim() && !image) || uploading || submitting}
+                  disabled={(!content.trim() && images.length === 0) || uploading || submitting}
                   className="btn-primary px-5 py-2 text-sm disabled:opacity-50"
                 >
                   {submitting ? "Публикация..." : "Опубликовать"}
@@ -172,6 +185,7 @@ async function compressImage(file: File, maxWidth: number, quality: number): Pro
         ref={fileInputRef}
         type="file"
         accept="image/*"
+        multiple
         className="hidden"
         onChange={handleImageUpload}
       />

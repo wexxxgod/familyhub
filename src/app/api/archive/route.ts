@@ -30,6 +30,7 @@ export async function POST(req: NextRequest) {
         title: data.title,
         description: data.description,
         url: data.url,
+        images: data.images || [],
         category: data.category,
         year: data.year ? safeInt(data.year) : null,
         tags: data.tags || [],
@@ -40,6 +41,35 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     logError("archive_POST", error);
     return jsonError("Failed to create archive item", 500);
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const user = await getCurrentUser(req);
+    if (!user) return jsonError("Unauthorized", 401);
+    const data = await req.json();
+    const item = await prisma.archiveItem.findUnique({ where: { id: data.id } });
+    if (!item) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (item.uploadedById !== user.id && user.role !== Role.SUPER_ADMIN) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+    const updated = await prisma.archiveItem.update({
+      where: { id: data.id },
+      data: {
+        ...(data.title !== undefined && { title: data.title }),
+        ...(data.description !== undefined && { description: data.description }),
+        ...(data.url !== undefined && { url: data.url }),
+        ...(data.images !== undefined && { images: data.images }),
+        ...(data.category !== undefined && { category: data.category }),
+        ...(data.year !== undefined && { year: data.year ? safeInt(data.year) : null }),
+        ...(data.tags !== undefined && { tags: data.tags }),
+      },
+    });
+    return NextResponse.json(updated);
+  } catch (error) {
+    logError("archive_PATCH", error);
+    return jsonError("Failed to update archive item", 500);
   }
 }
 

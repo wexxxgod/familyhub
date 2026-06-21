@@ -45,12 +45,13 @@ export async function POST(req: NextRequest) {
     const user = await getCurrentUser(req);
     if (!user) return jsonError("Unauthorized", 401);
 
-    const { content, image, video, document, tags, visibility } = await req.json();
+    const { content, image, images, video, document, tags, visibility } = await req.json();
 
     const post = await prisma.post.create({
       data: {
         content,
         image,
+        images: images || [],
         video,
         document,
         tags: tags || [],
@@ -101,7 +102,7 @@ export async function PATCH(req: NextRequest) {
   try {
     const user = await getCurrentUser(req);
     if (!user) return jsonError("Unauthorized", 401);
-    const { id, content, tags } = await req.json();
+    const { id, content, tags, images } = await req.json();
     const post = await prisma.post.findUnique({ where: { id } });
     if (!post) return NextResponse.json({ error: "Not found" }, { status: 404 });
     if (post.authorId !== user.id) {
@@ -112,6 +113,7 @@ export async function PATCH(req: NextRequest) {
       data: {
         ...(content !== undefined && { content }),
         ...(tags !== undefined && { tags }),
+        ...(images !== undefined && { images }),
       },
       include: { author: true, comments: { include: { author: true } }, likes: true },
     });
