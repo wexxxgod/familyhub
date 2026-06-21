@@ -24,9 +24,11 @@ Cookie-based сессия (`familyhub.session`), `getCurrentUser` helper из `a
 - `scripts/migrate-images.ts` — скрипт конвертации base64→файлы
 - `public/uploads/` — временная директория
 
-### Что было отменено (2 коммита ревертнуты)
-- `vercel-build` скрипт (миграции нужно запускать руками или через деплой)
-- `directUrl` в Prisma schema
+### Что починено (текущий фикс)
+- `vercel-build` скрипт: `prisma generate && prisma db push && next build`
+- Используется `db push` вместо `migrate deploy` (нет базовой миграции, только db push изначально)
+- `directUrl = env("DIRECT_URL")` в Prisma schema — на Vercel нужно установить `DIRECT_URL` (непулерное соединение для DDL)
+- `.env` и `.env.example` обновлены: добавлена `DIRECT_URL`
 
 ## Проблемы
 - **Neon заблокирован в регионе** — локально миграции и скрипты не запустить
