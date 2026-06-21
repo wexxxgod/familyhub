@@ -1,8 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
 import { getCurrentUser, logError, jsonError } from "@/lib/auth-helpers";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
-import { randomUUID } from "crypto";
 
 export async function POST(req: NextRequest) {
   try {
@@ -21,8 +18,6 @@ export async function POST(req: NextRequest) {
     if (!allowedTypes.includes(file.type)) return NextResponse.json({ error: "Invalid file type" }, { status: 400 });
 
     let buffer = Buffer.from(await file.arrayBuffer());
-    let ext = "jpg";
-
     if (file.type.startsWith("image/")) {
       try {
         const sharp = (await import("sharp")).default;
@@ -32,16 +27,11 @@ export async function POST(req: NextRequest) {
           .toBuffer();
         buffer = Buffer.from(compressed);
       } catch {}
-    } else if (file.type === "application/pdf") {
-      ext = "pdf";
     }
+    const base64 = buffer.toString("base64");
+    const dataUrl = `data:image/jpeg;base64,${base64}`;
 
-    const filename = `${randomUUID()}.${ext}`;
-    const uploadDir = join(process.cwd(), "public", "uploads");
-    await mkdir(uploadDir, { recursive: true });
-    await writeFile(join(uploadDir, filename), buffer);
-
-    return NextResponse.json({ url: `/uploads/${filename}`, name: file.name, size: buffer.length });
+    return NextResponse.json({ url: dataUrl, name: file.name, size: buffer.length });
   } catch (error) {
     logError("upload", error);
     return jsonError("Upload failed", 500);
