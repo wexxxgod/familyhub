@@ -137,7 +137,7 @@ function LoginForm({ onBack, onForgot }: { onBack: () => void; onForgot?: () => 
 
   useEffect(() => {
     if (window.location.search.includes("registered=1")) {
-      setSuccessBanner("Аккаунт создан! Подтвердите email — мы отправили письмо.");
+      setSuccessBanner("Аккаунт создан! Можете войти.");
       window.history.replaceState({}, "", "/login");
     }
   }, []);

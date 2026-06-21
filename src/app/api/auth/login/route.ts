@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Неверный email или пароль" }, { status: 401 });
     }
 
-    if (!user.emailVerified) {
+    if (process.env.RESEND_API_KEY && !user.emailVerified) {
       return NextResponse.json({ error: "Email не подтверждён. Проверьте почту." }, { status: 403 });
     }
 

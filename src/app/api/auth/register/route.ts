@@ -38,7 +38,8 @@ export async function POST(req: NextRequest) {
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
-    const verificationToken = crypto.randomUUID();
+    const hasEmailKey = !!process.env.RESEND_API_KEY;
+    const verificationToken = hasEmailKey ? crypto.randomUUID() : null;
 
     const user = await prisma.user.create({
       data: {
@@ -46,13 +47,16 @@ export async function POST(req: NextRequest) {
         email,
         passwordHash,
         verificationToken,
+        emailVerified: !hasEmailKey,
         role: Role.FAMILY_MEMBER,
       },
     });
 
-    sendVerificationEmail(email, verificationToken).catch((err) =>
-      logError("register_send_verification", err),
-    );
+    if (hasEmailKey) {
+      sendVerificationEmail(email, verificationToken!).catch((err) =>
+        logError("register_send_verification", err),
+      );
+    }
 
     return NextResponse.json({
       id: user.id,
